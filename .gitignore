@@ -7,9 +7,12 @@ __pycache__/
 dist/
 build/
 *.egg-info/
-corpus/raw/*.pdf
-corpus/raw/*.txt
-corpus/processed/*.jsonl
+corpus/raw/*
+!corpus/raw/.gitkeep
+
+# Qdrant now uses a named docker volume, but a bind-mount directory from an
+# earlier run may still be on disk — and it is root-owned, so it is easy to
+# stage by accident with `git add -A`.
 qdrant_storage/
 eval/results/
 logs/

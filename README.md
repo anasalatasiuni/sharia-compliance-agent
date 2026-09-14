@@ -248,25 +248,32 @@ docker compose up -d qdrant       # vector store on :6333
 
 ### Fetch the corpus
 
-Not committed — it is ~12 MB of third-party standards text.
+Not committed — 12 MB of third-party standards. Ingestion reads the PDF directly
+and shells out to `pdftotext`, so you also need poppler.
 
 ```bash
-curl -L -o corpus/raw/aaoifi-standards-en-2017.txt \
-  "https://archive.org/download/AAOIFIShariaaStandardsENG1/AAOIFI_Shariaa-Standards-ENG%201_djvu.txt"
+# Debian/Ubuntu: sudo apt install poppler-utils
+#         macOS: brew install poppler
+
+curl -L -o corpus/raw/aaoifi-shariah-standards-en-2017.pdf \
+  "https://archive.org/download/AAOIFIShariaaStandardsENG1/AAOIFI_Shariaa-Standards-ENG%201.pdf"
 ```
 
 ### Build the index
 
 ```bash
-python -m sharia_agent.ingest.cli --dry-run   # parse + chunk, no API calls
-python -m sharia_agent.ingest.cli             # embed + index (~345 chunks)
+python -m sharia_agent.ingest.cli --dry-run   # parse + chunk, no API calls, free
+python -m sharia_agent.ingest.cli             # embed + index (~1,518 chunks)
 ```
 
-Writes `corpus/manifest.json` with the `corpus_version`, the detected embedding
-dimension, and an `index_snapshot` that folds in corpus content, clause selection
+The first run extracts text from the PDF and caches it alongside. It writes
+`corpus/manifest.json` with the `corpus_version`, the detected embedding
+dimension, and an `index_snapshot` folding in corpus content, clause selection
 and embedding model. Every audit record pins those, which is what makes a verdict
-replayable — and what invalidates any cache keyed on the snapshot as soon as the
+replayable — and what invalidates any cache keyed on the snapshot the moment the
 corpus is re-indexed.
+
+`--standards 8 9 13` indexes a subset; omit it for everything that parses cleanly.
 
 ### Run
 

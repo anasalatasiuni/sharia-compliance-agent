@@ -10,8 +10,9 @@ COPY pyproject.toml README.md ./
 COPY src/ ./src/
 RUN pip install --no-cache-dir .
 
-COPY corpus/ ./corpus/
-COPY eval/ ./eval/
+# Only the manifest is needed at runtime — it records which corpus version and
+# index snapshot the service should be serving. The source PDF is not shipped.
+COPY corpus/manifest.json ./corpus/manifest.json
 
 # Non-root: the container has no business writing to its own image.
 RUN useradd --create-home --uid 10001 appuser && chown -R appuser /app

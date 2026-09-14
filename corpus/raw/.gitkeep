@@ -1,0 +1,2 @@
+# The corpus PDF lands here. It is gitignored (12MB of third-party standards),
+# but the directory must exist in a fresh clone or the download has nowhere to go.

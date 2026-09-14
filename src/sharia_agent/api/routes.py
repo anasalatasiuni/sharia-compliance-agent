@@ -175,15 +175,25 @@ async def health(request: Request, response: Response):
     components: dict[str, dict] = {}
     ok = True
 
+    manifest = app.state.manifest
+    expected = manifest.get("chunk_count")
     try:
         points = await asyncio.wait_for(app.state.store.count(), timeout=5)
-        healthy = points > 0
-        components["vector_store"] = {
-            "status": "ok" if healthy else "empty",
-            "points": points,
-            "collection": settings.collection,
-        }
-        ok &= healthy
+        detail = {"points": points, "collection": settings.collection}
+        if points == 0:
+            detail["status"] = "empty"
+        elif expected and points != expected:
+            # The manifest is what audit records cite as corpus_version and
+            # index_snapshot. If it describes a different index than the one
+            # actually being queried, every verdict is attributed to a corpus
+            # that did not produce it — worse than having no manifest at all.
+            detail["status"] = "manifest_mismatch"
+            detail["expected_points"] = expected
+            detail["hint"] = "re-run ingest, or point SCA_QDRANT_URL at the indexed collection"
+        else:
+            detail["status"] = "ok"
+        components["vector_store"] = detail
+        ok &= detail["status"] == "ok"
     except Exception as exc:  # noqa: BLE001
         components["vector_store"] = {"status": "error", "error": f"{type(exc).__name__}"}
         ok = False
@@ -196,7 +206,6 @@ async def health(request: Request, response: Response):
     components["credentials"] = {"openrouter": bool(settings.openrouter_api_key)}
     ok &= all(components["credentials"].values())
 
-    manifest = app.state.manifest
     body = {
         "status": "ok" if ok else "degraded",
         "env": settings.env,
