@@ -1,0 +1,30 @@
+# Render blueprint.
+#
+# Note the instance size: the default free tier is 512 MB, which is enough for
+# the `llm` rerank backend but not for `local` (bge-reranker-v2-m3 needs ~560 MB
+# resident plus headroom). Moving reranking in-process — which is what stops
+# clause text leaving the jurisdiction — means paying for the RAM.
+services:
+  - type: web
+    name: sharia-compliance-agent
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter            # 512MB free tier cannot host the local reranker
+    healthCheckPath: /health/live   # liveness, not readiness — readiness 503s
+                                    # before the index is built, which would
+                                    # block the first deploy
+    envVars:
+      - key: OPENROUTER_API_KEY
+        sync: false          # set in the dashboard; never in the blueprint
+      - key: SCA_QDRANT_URL
+        sync: false          # Qdrant Cloud cluster URL
+      - key: SCA_QDRANT_API_KEY
+        sync: false
+      - key: SCA_ENV
+        value: staging
+      - key: SCA_LOG_FULL_PROMPTS
+        value: "false"       # query text must not reach operational logs
+      - key: SCA_RERANK_BACKEND
+        value: llm           # switch to `local` once on an instance with RAM
+      - key: SCA_PRINCIPALS
+        sync: false          # demo tokens only; real deployment uses OIDC

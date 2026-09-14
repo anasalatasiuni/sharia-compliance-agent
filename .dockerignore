@@ -1,0 +1,10 @@
+.venv/
+.git/
+qdrant_storage/
+corpus/raw/
+eval/results/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.env

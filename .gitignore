@@ -1,0 +1,21 @@
+.env
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+corpus/raw/*.pdf
+corpus/raw/*.txt
+corpus/processed/*.jsonl
+qdrant_storage/
+eval/results/
+logs/
+
+# docs/ is a deliverable in this repo. A global ignore rule (**/docs/) excludes
+# it, so re-include it explicitly. The directory itself has to be un-ignored
+# first — git will not descend into an excluded directory to find negations.
+!docs/
+!docs/**
