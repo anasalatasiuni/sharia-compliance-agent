@@ -1,0 +1,444 @@
+# Shari'ah Compliance Agent
+
+Decision support for Mal's internal compliance team. Give it a proposed product
+or transaction in plain English; it returns an evidence-backed preliminary
+assessment against the AAOIFI Shari'ah Standards, with every claim cited to a
+specific clause.
+
+> **It does not issue Shari'ah rulings.** Under CBUAE rules, Shari'ah
+> determinations are reserved to the institution's Internal Shari'ah Supervision
+> Committee (ISSC). This system triages and prepares a defensible memo for that
+> committee. `NEEDS_REVIEW` is its primary output, not its failure mode.
+
+---
+
+## The central design decision
+
+The brief asks for an "AI agent". For a compliance verdict, an *autonomous*
+agent is the wrong shape, and the difference is the whole architecture:
+
+> **The model has genuine agency over what evidence to gather, and none over how
+> the verdict is decided.**
+
+It can reformulate a question into the vocabulary the standards actually use, and
+it can search again. It cannot choose the control flow, and it has no `verdict`
+field to fill in. The two places a verdict is decided — Gate A and Gate B — are
+ordinary Python that calls no model.
+
+This buys three things a ReAct loop cannot:
+
+| | |
+|---|---|
+| **Reproducibility** | An unbounded loop takes a different trajectory each run. A regulator asking "why did it say this?" needs the same answer twice. |
+| **Auditability** | The control flow is 200 lines you can read, not a framework's internals. |
+| **Asymmetric safety** | Guardrails only ever escalate. A model regression can make the system noisier; it cannot make it more permissive. |
+
+---
+
+## Architecture
+
+```
+  POST /assess                                        ┌──────────────────┐
+  Authorization: Bearer <token>                       │  Qdrant          │
+         │                                            │  345 clauses     │
+         ▼                                            │  dense + sparse  │
+  ┌─────────────────────────────────────────┐         └────────▲─────────┘
+  │ 1  INTAKE                               │                  │
+  │    authorize · redact PII · trace_id    │                  │
+  └────────────────────┬────────────────────┘                  │
+                       ▼                                       │
+  ┌─────────────────────────────────────────┐                  │
+  │ 2  RETRIEVE   seed search — always runs │──────────────────┤
+  │      bge-m3 dense ─┐                    │                  │
+  │      BM25 sparse  ─┴─▶ RRF fusion       │                  │
+  │      cross-encoder rerank ─▶ top 5      │                  │
+  └────────────────────┬────────────────────┘                  │
+                       ▼                                       │
+  ┌─────────────────────────────────────────┐                  │
+  │ 3  REFINE     bounded agentic loop      │──────────────────┘
+  │    model may search again · max 3 total │
+  │    repeat-query detection               │   ◀── the only stage
+  └────────────────────┬────────────────────┘       with model agency
+                       ▼
+  ┌═════════════════════════════════════════┐
+  ║ 4  GATE A     enough evidence at all?   ║──── no ──┐
+  ╚════════════════════╤════════════════════╝          │
+                       ▼ yes                           │
+  ┌─────────────────────────────────────────┐          │
+  │ 5  REASON     claude-opus-5             │          │
+  │    structured output · schema-enforced  │          │
+  │    returns a *finding*, not a verdict   │          │
+  └────────────────────┬────────────────────┘          │
+                       ▼                               │
+  ┌─────────────────────────────────────────┐          │
+  │ 6  VALIDATE   citations resolve?        │          │
+  │               quotes verbatim?          │          │
+  └────────────────────┬────────────────────┘          │
+                       ▼                               │
+  ┌═════════════════════════════════════════┐          │
+  ║ 7  GATE B     guardrails                ║          │
+  ║    may escalate · may never relax       ║◀─────────┘
+  ╚════════════════════╤════════════════════╝
+                       ▼
+  ┌─────────────────────────────────────────┐
+  │ 8  EMIT     assessment + audit record   │
+  │  COMPLIANT │ NON_COMPLIANT │ NEEDS_REVIEW│
+  └─────────────────────────────────────────┘
+
+  ══ double border = decides a verdict, calls no model
+```
+
+### Two vocabularies, deliberately separated
+
+The model returns a **finding** about *evidence*. Deterministic code maps that
+onto the **verdict** the service returns. There is no code path where a guardrail
+produces `COMPLIANT`.
+
+```
+  model may return              code decides
+  ──────────────────            ─────────────
+  SUPPORTED_COMPLIANT      ──▶  COMPLIANT      (only if every gate passes)
+  SUPPORTED_NON_COMPLIANT  ──▶  NON_COMPLIANT  (only if every gate passes)
+  INSUFFICIENT_BASIS       ──▶  NEEDS_REVIEW
+  CONFLICTING_SOURCES      ──▶  NEEDS_REVIEW
+                           ──▶  NEEDS_REVIEW   ← any guardrail firing
+```
+
+### Escalation triggers
+
+`NEEDS_REVIEW` is produced by code, for reasons that are recorded as machine-readable
+codes so the escalation mix can be tracked as a product metric.
+
+| Code | Meaning |
+|---|---|
+| `weak_retrieval` | Top reranked clause below the score floor, or ranking unverified |
+| `no_citations` / `unresolved_citation` | A claim with no evidence, a citation to a clause that was never retrieved, or a quote that is not verbatim in the clause it names |
+| `low_confidence` | Model's own confidence below threshold |
+| `insufficient_basis` / `conflicting_sources` | The model's read of the evidence |
+| `superseded_standard` | A retrieved clause has been superseded |
+| `always_review_category` | Not a model failure — see below |
+| `schema_validation_failed` / `upstream_error` | The model or a dependency failed |
+
+**`always_review_category`** covers matters where a machine assessment is not the
+appropriate artefact however confident it is: novel structures, capital or profit
+guarantees on profit-sharing contracts, cross-border structuring, sukuk issuance,
+requests phrased as seeking approval, and any request containing personal
+identifiers.
+
+---
+
+## Corpus
+
+Real AAOIFI Shari'ah Standards (English, 2017), sourced from the
+[Internet Archive](https://archive.org/details/AAOIFIShariaaStandardsENG1).
+The parser recovers 52 standards / 1,406 citable clauses; eight are indexed:
+
+| No. | Standard | Chunks |
+|----:|----------|-------:|
+| 8 | Murabahah | 63 |
+| 9 | Ijarah and Ijarah Muntahia Bittamleek | 55 |
+| 12 | Sharikah (Musharakah) and Modern Corporations | 66 |
+| 13 | Mudarabah | 32 |
+| 17 | Investment Sukuk | 45 |
+| 23 | Agency (Wakala) and the Act of an Uncommissioned Agent | 41 |
+| 31 | Controls on Gharar in Financial Transactions | 26 |
+| 49 | Unilateral and Bilateral Promise (Wa'd) | 17 |
+| | **Total** | **345** |
+
+Four contract families Mal actually issues, plus the two cross-cutting standards
+(gharar, promise) that most product questions turn out to hinge on.
+
+### Why the chunk is the clause
+
+AAOIFI text is hierarchically numbered — `2/2/2` sits under `2/2` under `2`. So:
+
+> **The chunk boundary is the citation unit.**
+
+A retrieved chunk *is* a reference a compliance officer can verify by hand
+(`AAOIFI SS No. 8 (Murabahah), clause 3/1/1`). A generic recursive splitter would
+straddle `2/2/2` and `2/2/3` and a citation could then only point at a page.
+
+Each chunk carries its heading path, because disclosure text repeats near-identical
+language across products — profit distribution under Mudarabah and under Wakala read
+alike and mean different things. Clauses longer than 1,800 characters are split on
+sentence boundaries with overlap, keeping the parent clause path.
+
+Working from OCR text means the parser explicitly handles soft hyphens at line
+breaks, running page headers, bare page numbers, and a table of contents whose
+entries look exactly like clause openings. Standard titles are resolved by
+frequency voting: a title is repeated as a running header dozens of times, while a
+cross-reference inside another clause (`...Standard No. (8) on Murabahah and item
+2/2/4 of...`) matches the same regex but occurs once.
+
+---
+
+## Quick start
+
+**Prerequisites:** Python 3.12+, Docker, and an
+[OpenRouter](https://openrouter.ai) API key. That key is the only credential
+needed — it serves both reasoning and embeddings. Qdrant runs locally.
+
+```bash
+git clone <repo> && cd sharia-compliance-agent
+
+cp .env.example .env
+$EDITOR .env                      # set OPENROUTER_API_KEY
+
+uv venv --python 3.12
+uv pip install -e ".[dev]"
+
+docker compose up -d qdrant       # vector store on :6333
+```
+
+### Fetch the corpus
+
+Not committed — it is ~12 MB of third-party standards text.
+
+```bash
+curl -L -o corpus/raw/aaoifi-standards-en-2017.txt \
+  "https://archive.org/download/AAOIFIShariaaStandardsENG1/AAOIFI_Shariaa-Standards-ENG%201_djvu.txt"
+```
+
+### Build the index
+
+```bash
+python -m sharia_agent.ingest.cli --dry-run   # parse + chunk, no API calls
+python -m sharia_agent.ingest.cli             # embed + index (~345 chunks)
+```
+
+Writes `corpus/manifest.json` with the `corpus_version`, the detected embedding
+dimension, and an `index_snapshot` that folds in corpus content, clause selection
+and embedding model. Every audit record pins those, which is what makes a verdict
+replayable — and what invalidates any cache keyed on the snapshot as soon as the
+corpus is re-indexed.
+
+### Run
+
+```bash
+uvicorn sharia_agent.api.main:app --reload     # http://localhost:8000/docs
+```
+
+---
+
+## Using the API
+
+### Assess (synchronous)
+
+```bash
+curl -sS -X POST http://localhost:8000/assess \
+  -H "Authorization: Bearer demo-token-analyst" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Can Mal sell a vehicle to a customer under murabaha before we have purchased it from the dealer?"}'
+```
+
+```jsonc
+{
+  "assessment_id": "3f2a…",
+  "trace_id": "9c81…",
+  "verdict": "NON_COMPLIANT",
+  "confidence": 0.93,
+  "reasoning": "The arrangement requires the Institution to contract a sale …",
+  "citations": [
+    {
+      "chunk_id": "SS8-3.1.1",
+      "quote": "shall not sell any item in a Murabahah transaction before it acquires such item",
+      "supports": "ownership must precede the sale contract"
+    }
+  ],
+  "concerns": ["ownership_sequence"],
+  "escalations": [],
+  "missing_information": [],
+  "clauses_considered": ["SS8-3.1.1", "SS8-3.2.1", "…"],
+  "corpus_version": "aaoifi-en-2017@7e97db3fac813e01",
+  "model": "anthropic/claude-opus-5",
+  "prompt_version": "v1",
+  "latency_ms": 7412,
+  "disclaimer": "Decision-support output. This is not a fatwa …"
+}
+```
+
+### Assess (asynchronous)
+
+A hard question with three retrieval rounds can outrun a client timeout. The
+async path is also the shape this service takes at volume.
+
+```bash
+curl -sS -X POST "http://localhost:8000/assess?mode=async" \
+  -H "Authorization: Bearer demo-token-analyst" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Is a diminishing musharaka home finance structure with a binding purchase undertaking acceptable?"}'
+# → 202 {"job_id": "a1b2…", "status": "queued", "poll": "/assess/a1b2…"}
+
+curl -sS http://localhost:8000/assess/a1b2… \
+  -H "Authorization: Bearer demo-token-analyst"
+```
+
+Jobs are readable only by the principal that created them — otherwise a job id is
+a capability anyone can guess.
+
+### Health
+
+`/health` is **readiness**, not liveness. A process that is up but whose
+collection is empty answers every question with `NEEDS_REVIEW` and looks healthy
+doing it, so the check requires the index to have content.
+
+```bash
+curl -sS http://localhost:8000/health | jq
+curl -sS http://localhost:8000/health/live     # pure liveness
+```
+
+Returns `503` when the index is empty, a credential is missing, or a circuit
+breaker is open.
+
+---
+
+## Configuration
+
+Everything tunable is an environment variable, so a deployment is reproducible
+from its environment alone. Full list in [`.env.example`](.env.example).
+
+| Variable | Default | Notes |
+|---|---|---|
+| `OPENROUTER_API_KEY` | — | The only credential required |
+| `SCA_MODEL` | `anthropic/claude-opus-5` | Reasoning model |
+| `SCA_EMBED_MODEL` | `baai/bge-m3` | Multilingual, real Arabic coverage |
+| `SCA_EMBED_DIM` | `0` | `0` = detect from the provider at ingest |
+| `SCA_RERANK_BACKEND` | `llm` | `llm` \| `local` \| `none` — see below |
+| `SCA_RETRIEVE_CANDIDATES` | `40` | Hybrid pool before reranking |
+| `SCA_RERANK_TOP_K` | `5` | Clauses sent to the model |
+| `SCA_MAX_RETRIEVAL_ROUNDS` | `3` | Hard cap on the search loop |
+| `SCA_MIN_RERANK_SCORE` | `0.35` | Below this → `weak_retrieval` |
+| `SCA_MIN_MODEL_CONFIDENCE` | `0.70` | Below this → `low_confidence` |
+| `SCA_LOG_FULL_PROMPTS` | `true` | **Must be `false` in production** |
+
+### Reranking backends
+
+OpenRouter exposes no rerank endpoint, so this is a deployment choice.
+
+| Backend | Cost | Data egress | Use |
+|---|---|---|---|
+| `llm` | ~$0.01/query | Clause text leaves | Demo default — no extra setup |
+| `local` | free | **None** | Production. `bge-reranker-v2-m3`, Apache-2.0, ~560 MB on CPU. `pip install -e ".[local-rerank]"` |
+| `none` | free | None | Fusion order only; guardrails escalate for unverified ranking |
+
+`jina-reranker-v2-multilingual` scores better but is CC-BY-NC-4.0 and therefore
+unusable commercially at a bank.
+
+---
+
+## Observability
+
+Structured JSON to stdout, one line per stage, every line carrying `trace_id`.
+Span names are OpenTelemetry-shaped (`sharia.retrieve`, `sharia.reason`), so
+swapping stdout for a collector is a wiring change.
+
+```jsonc
+{"ts":"…","level":"INFO","msg":"sharia.retrieve","trace_id":"9c81…",
+ "principal":"analyst@mal.ae","duration_ms":412,"candidates":40,"sparse_terms":14}
+{"ts":"…","level":"INFO","msg":"sharia.rerank","trace_id":"9c81…",
+ "backend":"llm","returned":5,"top_score":0.91}
+{"ts":"…","level":"INFO","msg":"sharia.reason","trace_id":"9c81…",
+ "clauses":5,"finding":"SUPPORTED_NON_COMPLIANT","confidence":0.93}
+```
+
+### The audit record
+
+Emitted as one `audit.record` event per assessment, so it inherits retention,
+access control and shipping from the normal log pipeline. It is what a Shari'ah
+reviewer is actually shown, and it contains everything needed to replay a verdict
+months later:
+
+```
+trace_id · assessment_id · principal_id · query_hash
+corpus_version · index_snapshot · model · model_effort · prompt_version
+retrieval_rounds[]   each query, why it was issued, how many hits
+retrieved[]          chunk_id + dense / sparse / fused / rerank scores
+draft                the model's finding, confidence, citations
+final_verdict · escalations[]
+stages[]             per-stage latency
+usage                tokens across every call the assessment made
+```
+
+Pinning `corpus_version` and `prompt_version` is the point: without them you
+cannot tell whether a disputed verdict came from a **retrieval miss** (wrong
+clauses reached the model) or a **reasoning miss** (right clauses, wrong
+conclusion). Those have different fixes and the distinction is unrecoverable
+after the fact if it was not recorded.
+
+---
+
+## Testing
+
+```bash
+pytest -q          # 25 tests, no network
+ruff check .
+```
+
+`tests/test_guardrails.py` pins the safety properties — fabricated quotes caught,
+citations to unretrieved clauses caught, always-review categories escalating
+despite a clean draft, and the one-directional invariant stated directly as a
+test. `tests/test_pipeline.py` drives the state machine against fake providers:
+the seed search always runs, the retrieval loop is genuinely bounded, repeated
+identical searches are suppressed, and an upstream failure degrades to escalation
+rather than to an answer.
+
+---
+
+## Known limitations
+
+**Corpus is a slice.** Eight of 61 AAOIFI standards, English only, one edition.
+Questions outside those contract families retrieve weakly and escalate — correct
+behaviour, but it narrows the useful surface. No CBUAE circulars, no HSA
+resolutions, no Mal-internal product policy, all of which would bind in practice.
+
+**No supersession data.** The schema and the guardrail exist, but nothing
+populates `superseded_by`, because the 2017 edition was ingested as a flat
+snapshot. A superseded clause would currently be cited as though live. This is
+the most dangerous gap in the system.
+
+**Reranking defaults to an LLM.** Costs ~$0.01/query and sends clause text to a
+third party. Fine for a demo, wrong for production; `local` fixes both.
+
+**Job store is in-process.** Async jobs die with the process and do not survive a
+second replica.
+
+**Auth is static tokens.** Demo scaffolding. Real deployment resolves against the
+bank's OIDC provider; the `scopes` shape downstream is already the right one.
+
+**Redaction is compensating, not sufficient.** CBUAE requires consumer and
+transaction data to be stored and processed inside the UAE. This deployment sends
+redacted text to a US-hosted gateway. That is defensible for a demo and not for
+production — see [`docs/PART2-technical-decisions.md`](docs/PART2-technical-decisions.md) §5.
+
+**English-only retrieval, tested.** The embedding model and the sparse tokenizer
+both handle Arabic (the tokenizer folds alef and ta-marbuta variants), but the
+indexed corpus is the English edition and no Arabic query has been evaluated.
+
+**No measured eval numbers yet.** The framework is specified in §3 of the
+technical document; it has not been run.
+
+---
+
+## Layout
+
+```
+src/sharia_agent/
+  config.py          settings; the only source of tunables
+  models.py          domain types — the two vocabularies live here
+  llm.py             OpenRouter client; strict-schema structured output
+  pii.py             redaction, applied on the request path
+  resilience.py      per-service timeouts, backoff, circuit breakers
+  jobs.py            async job store
+  ingest/            parse → chunk → embed → index, + manifest
+  retrieval/         sparse BM25 · Qdrant store · embeddings · rerank · hybrid
+  agent/             prompts · tools · guardrails · pipeline
+  api/               routes · auth · app wiring
+  obs/               trace ids, spans, JSON logging
+```
+
+## Further reading
+
+[`docs/PART2-technical-decisions.md`](docs/PART2-technical-decisions.md) — the
+architecture decisions and what was ruled out, scaling to 50k queries/day, the
+evaluation framework, production observability, security and regulatory risk
+under CBUAE and PDPL, and an honest account of what was cut.
