@@ -100,7 +100,11 @@ class LLM:
     def __init__(self, settings: Settings) -> None:
         self._s = settings
         self.client = AsyncOpenAI(
-            api_key=settings.openrouter_api_key,
+            # A missing key must not prevent construction. The service should
+            # boot and report "degraded" on /health with the reason, rather than
+            # crash-looping with an opaque SDK error — a container that reports
+            # why it is unhealthy is far more operable than one that dies.
+            api_key=settings.openrouter_api_key or "MISSING",
             base_url=settings.openrouter_base_url,
             timeout=120.0,
             max_retries=0,  # retries are owned by call_with_resilience
@@ -112,8 +116,14 @@ class LLM:
         )
 
     def _extra_body(self) -> dict[str, Any]:
-        # Reasoning effort is expressed per-gateway; OpenRouter normalises this
-        # onto whichever underlying provider serves the request.
+        """Gateway-specific request extras.
+
+        Reasoning effort is a capability of some models and not others — Haiku
+        4.5 predates it. `SCA_MODEL_EFFORT=none` omits the field so a cheaper
+        model can be swapped in without a 400.
+        """
+        if self._s.model_effort == "none":
+            return {}
         return {"reasoning": {"effort": self._s.model_effort}}
 
     async def complete(

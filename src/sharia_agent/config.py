@@ -69,10 +69,14 @@ class Settings(BaseSettings):
     @field_validator("model_effort")
     @classmethod
     def _valid_effort(cls, v: str) -> str:
-        allowed = {"low", "medium", "high", "xhigh", "max"}
-        if v not in allowed:
+        # "none" omits the parameter. Reasoning-effort is a property of the
+        # model, not of every model: Haiku 4.5 predates it and rejects it on the
+        # first-party API. The gateway usually drops unsupported parameters, but
+        # relying on that would make the model choice silently fragile.
+        allowed = {"none", "low", "medium", "high", "xhigh", "max"}
+        if v.lower() not in allowed:
             raise ValueError(f"model_effort must be one of {sorted(allowed)}")
-        return v
+        return v.lower()
 
     @field_validator("rerank_backend")
     @classmethod

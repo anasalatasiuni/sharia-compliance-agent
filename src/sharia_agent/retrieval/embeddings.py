@@ -29,7 +29,11 @@ class Embedder:
         self._s = settings
         self._dim: int | None = settings.embed_dim or None
         self.client = AsyncOpenAI(
-            api_key=settings.openrouter_api_key,
+            # A missing key must not prevent construction. The service should
+            # boot and report "degraded" on /health with the reason, rather than
+            # crash-looping with an opaque SDK error — a container that reports
+            # why it is unhealthy is far more operable than one that dies.
+            api_key=settings.openrouter_api_key or "MISSING",
             base_url=settings.openrouter_base_url,
             timeout=60.0,
             max_retries=0,
