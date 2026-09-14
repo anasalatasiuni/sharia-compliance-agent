@@ -162,6 +162,25 @@ title appears as a running header dozens of times, while a cross-reference insid
 another clause (`...Standard No. (8) on Murabahah and item 2/2/4 of...`) matches
 the same regex once.
 
+### 1.4.1 Source defects are permanent
+
+Clause SS8-3.1.1 reads `"concludes a urchase contract"`. That survives every
+extraction mode of the publisher's own PDF and is the only dropped-letter instance
+in 1,264 pages — a typo in the published standard, not an OCR artefact. No cleaner
+source exists to switch to; a structured edition would carry the same text.
+
+The consequence shaped a control. Citation checking cannot demand character-perfect
+equality with the source, because the source is not character-perfect. It instead
+verifies provenance fuzzily, polarity exactly, and substance by length (§4 of
+`CODE-WALKTHROUGH.md`). The first live assessment proved the point: a correct
+verdict with three accurate citations was escalated because the model had silently
+corrected the typo while quoting.
+
+This generalises past AAOIFI. The documents Mal will index next — its own term
+sheets, counsel memos, customer-supplied drafts — are messier than a typeset
+standard. Robustness to source defects is a permanent requirement, not a
+workaround for a bad pipeline.
+
 ### 1.5 Agent framework — none
 
 **Plain Python, ~200 lines of explicit state machine.**
@@ -687,9 +706,13 @@ counts as "the same question".
 is AAOIFI-only. Unacceptable on the day Mal indexes its own or customer documents,
 which is the obvious next feature.
 
-**8. Single corpus edition, manual ingestion.** Eight of 61 standards, English only,
-no CBUAE circulars, no HSA resolutions, no Mal product policy. *Cost:* the useful
-question surface is narrow, and staleness is guaranteed rather than merely possible.
+**8. Single corpus edition, manual ingestion.** All 48 standards that parse cleanly
+are now indexed (1,518 clauses), so coverage is no longer the binding limitation it
+was — but it is still one edition, English only, with no CBUAE circulars, no HSA
+resolutions and no Mal product policy, any of which would bind in practice.
+Ingestion is still a command someone runs. *Cost:* staleness is guaranteed rather
+than merely possible, and the standards are the smaller half of what actually
+governs a UAE product decision.
 
 **9. No Arabic evaluation.** The embedder and the sparse tokenizer both handle
 Arabic — the tokenizer folds alef and ta-marbuta variants — but the indexed corpus

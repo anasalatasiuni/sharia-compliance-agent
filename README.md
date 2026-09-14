@@ -129,24 +129,75 @@ identifiers.
 
 ## Corpus
 
-Real AAOIFI Shari'ah Standards (English, 2017), sourced from the
-[Internet Archive](https://archive.org/details/AAOIFIShariaaStandardsENG1).
-The parser recovers 52 standards / 1,406 citable clauses; eight are indexed:
+Real AAOIFI Shari'ah Standards (English, 2017). The source is **the publisher's
+own PDF**, not the Internet Archive's OCR of it — both are available, and the PDF
+carries a genuine text layer that parses measurably cleaner (48 of 48 standards
+resolve, against 46 of 52 from the OCR, with ~8% more clauses surviving).
+
+**1518 clauses across 48 standards**, every standard that parses cleanly.
+`corpus_version: aaoifi-en-2017@145a0995711cf7ed`
+
+<details>
+<summary>Standards indexed</summary>
 
 | No. | Standard | Chunks |
 |----:|----------|-------:|
-| 8 | Murabahah | 63 |
-| 9 | Ijarah and Ijarah Muntahia Bittamleek | 55 |
-| 12 | Sharikah (Musharakah) and Modern Corporations | 66 |
+| 1 | Trading in Currencies | 24 |
+| 2 | Debit Card, Charge Card and Credit Card | 24 |
+| 3 | Procrastinating Debtor | 14 |
+| 4 | Settlement of Debts by Set-Off | 9 |
+| 5 | Guarantees | 43 |
+| 6 | Conversion of a Conventional Bank to an Islamic Bank | 32 |
+| 7 | Hawalah | 27 |
+| 8 | Murabahah | 64 |
+| 9 | Ijarah and Ijarah Muntahia Bittamleek | 57 |
+| 10 | Salam and Parallel Salam | 30 |
+| 11 | Istisna'a and Parallel Istisna'a | 54 |
+| 12 | Sharikah (Musharakah), and Modern Corporations | 91 |
 | 13 | Mudarabah | 32 |
-| 17 | Investment Sukuk | 45 |
-| 23 | Agency (Wakala) and the Act of an Uncommissioned Agent | 41 |
-| 31 | Controls on Gharar in Financial Transactions | 26 |
-| 49 | Unilateral and Bilateral Promise (Wa'd) | 17 |
-| | **Total** | **345** |
+| 14 | Documentary Credit | 37 |
+| 15 | Ju'alah | 24 |
+| 16 | Commercial Papers | 16 |
+| 17 | Investment Sukuk | 58 |
+| 18 | Possession (Qabd) | 18 |
+| 19 | Loan (Qard) | 14 |
+| 20 | Sale of Commodities in Organized Markets | 28 |
+| 21 | Financial Paper (Shares and Bonds) | 37 |
+| 22 | Concession Contracts | 38 |
+| 23 | Agency and the Act of an Uncommissioned Agent (Fodoo | 33 |
+| 24 | Syndicated Financing | 17 |
+| 25 | Combination of Contracts | 25 |
+| 26 | Islamic Insurance | 41 |
+| 27 | Indices | 18 |
+| 28 | Banking Services in Islamic Banks | 10 |
+| 29 | Stipulations and Ethics of Fatwa in the Institutiona | 38 |
+| 30 | Monetization (Tawarruq) | 13 |
+| 31 | Controls on Gharar in Financial Transactions | 29 |
+| 32 | Arbitration | 43 |
+| 33 | Waqf | 42 |
+| 34 | Hiring of Persons | 38 |
+| 35 | Zakah | 115 |
+| 36 | Impact of Contingent Incidents on Commitments | 9 |
+| 37 | Credit Agreement | 32 |
+| 38 | Online Financial Dealings | 26 |
+| 39 | Mortgage and Its Contemporary Applications | 26 |
+| 40 | Distribution of Profit in Mudarabah-Based Investment | 47 |
+| 41 | Islamic Reinsurance | 17 |
+| 45 | Protection of Capital and Investments | 16 |
+| 49 | Unilateral and Bilateral Promise | 17 |
+| 50 | Irrigation Partnership (Musaqat) | 23 |
+| 51 | Options to Revoke Contracts Due to Incomplete Perfor | 22 |
+| 52 | Options to Reconsider (Cooling-Off Options, Either-O | 27 |
+| 53 | 'Arboun (Earnest Money) | 11 |
+| 54 | Revocation of Contracts by Exercise of a Cooling-Off | 12 |
 
-Four contract families Mal actually issues, plus the two cross-cutting standards
-(gharar, promise) that most product questions turn out to hinge on.
+</details>
+
+Ingestion applies a quality gate (`ingest/parse.py`, `is_well_parsed`): a standard
+whose title never resolved, or which yielded almost no numbered entries, did not
+really parse — its headers were damaged in the source — and indexing it would
+inject noise without adding coverage. On the PDF text nothing is excluded; on the
+OCR text six standards are.
 
 ### Why the chunk is the clause
 
@@ -158,19 +209,24 @@ A retrieved chunk *is* a reference a compliance officer can verify by hand
 (`AAOIFI SS No. 8 (Murabahah), clause 3/1/1`). A generic recursive splitter would
 straddle `2/2/2` and `2/2/3` and a citation could then only point at a page.
 
-Each chunk carries its heading path, because disclosure text repeats near-identical
-language across products — profit distribution under Mudarabah and under Wakala read
-alike and mean different things. Clauses longer than 1,800 characters are split on
-sentence boundaries with overlap, keeping the parent clause path.
+Each chunk carries its heading path, because disclosure text repeats
+near-identical language across products — profit distribution under Mudarabah and
+under Wakala read alike and mean different things. Clauses longer than 1,800
+characters are split on sentence boundaries with overlap, keeping the parent
+clause path.
 
-Working from OCR text means the parser explicitly handles soft hyphens at line
-breaks, running page headers, bare page numbers, and a table of contents whose
-entries look exactly like clause openings. Standard titles are resolved by
-frequency voting: a title is repeated as a running header dozens of times, while a
-cross-reference inside another clause (`...Standard No. (8) on Murabahah and item
-2/2/4 of...`) matches the same regex but occurs once.
+### Source defects are permanent, and the system assumes it
 
----
+Clause SS8-3.1.1 reads `"concludes a urchase contract"` — in the publisher's own
+PDF, under every extraction mode, and it is the only dropped-letter instance in
+1,264 pages. It is a typo in the published standard, not an OCR artefact, and no
+cleaner source fixes it.
+
+That is why citation checking tolerates imperfect source text rather than
+demanding character-perfect equality (see *Checking the quotes* in
+`docs/CODE-WALKTHROUGH.md`). Mal will eventually index its own term sheets and
+counsel memos, which will be far messier than AAOIFI's typesetting. A system that
+requires a clean corpus is one that breaks on contact with production.
 
 ## Quick start
 

@@ -1,69 +1,260 @@
 {
-  "corpus_version": "aaoifi-en-2017@7e97db3fac813e01",
-  "index_snapshot": "b8ad9a92f8011775",
-  "built_at": "2026-09-14T02:42:03.347407+00:00",
+  "corpus_version": "aaoifi-en-2017@145a0995711cf7ed",
+  "index_snapshot": "bff37e1f657b9ae3",
+  "built_at": "2026-09-14T09:46:03.830514+00:00",
   "collection": "aaoifi_standards",
   "embed_model": "baai/bge-m3",
   "embed_dim": 1024,
-  "chunk_count": 345,
-  "points_in_collection": 345,
+  "chunk_count": 1518,
+  "points_in_collection": 1518,
   "standards": {
+    "1": {
+      "name": "Trading in Currencies",
+      "chunks": 24
+    },
+    "2": {
+      "name": "Debit Card, Charge Card and Credit Card",
+      "chunks": 24
+    },
+    "3": {
+      "name": "Procrastinating Debtor",
+      "chunks": 14
+    },
+    "4": {
+      "name": "Settlement of Debts by Set-Off",
+      "chunks": 9
+    },
+    "5": {
+      "name": "Guarantees",
+      "chunks": 43
+    },
+    "6": {
+      "name": "Conversion of a Conventional Bank to an Islamic Bank",
+      "chunks": 32
+    },
+    "7": {
+      "name": "Hawalah",
+      "chunks": 27
+    },
     "8": {
       "name": "Murabahah",
-      "chunks": 63
+      "chunks": 64
     },
     "9": {
       "name": "Ijarah and Ijarah Muntahia Bittamleek",
-      "chunks": 55
+      "chunks": 57
+    },
+    "10": {
+      "name": "Salam and Parallel Salam",
+      "chunks": 30
+    },
+    "11": {
+      "name": "Istisna'a and Parallel Istisna'a",
+      "chunks": 54
     },
     "12": {
       "name": "Sharikah (Musharakah), and Modern Corporations",
-      "chunks": 66
+      "chunks": 91
     },
     "13": {
       "name": "Mudarabah",
       "chunks": 32
     },
+    "14": {
+      "name": "Documentary Credit",
+      "chunks": 37
+    },
+    "15": {
+      "name": "Ju'alah",
+      "chunks": 24
+    },
+    "16": {
+      "name": "Commercial Papers",
+      "chunks": 16
+    },
     "17": {
       "name": "Investment Sukuk",
-      "chunks": 45
+      "chunks": 58
+    },
+    "18": {
+      "name": "Possession (Qabd)",
+      "chunks": 18
+    },
+    "19": {
+      "name": "Loan (Qard)",
+      "chunks": 14
+    },
+    "20": {
+      "name": "Sale of Commodities in Organized Markets",
+      "chunks": 28
+    },
+    "21": {
+      "name": "Financial Paper (Shares and Bonds)",
+      "chunks": 37
+    },
+    "22": {
+      "name": "Concession Contracts",
+      "chunks": 38
     },
     "23": {
       "name": "Agency and the Act of an Uncommissioned Agent (Fodooli)",
+      "chunks": 33
+    },
+    "24": {
+      "name": "Syndicated Financing",
+      "chunks": 17
+    },
+    "25": {
+      "name": "Combination of Contracts",
+      "chunks": 25
+    },
+    "26": {
+      "name": "Islamic Insurance",
       "chunks": 41
+    },
+    "27": {
+      "name": "Indices",
+      "chunks": 18
+    },
+    "28": {
+      "name": "Banking Services in Islamic Banks",
+      "chunks": 10
+    },
+    "29": {
+      "name": "Stipulations and Ethics of Fatwa in the Institutional Framework",
+      "chunks": 38
+    },
+    "30": {
+      "name": "Monetization (Tawarruq)",
+      "chunks": 13
     },
     "31": {
       "name": "Controls on Gharar in Financial Transactions",
+      "chunks": 29
+    },
+    "32": {
+      "name": "Arbitration",
+      "chunks": 43
+    },
+    "33": {
+      "name": "Waqf",
+      "chunks": 42
+    },
+    "34": {
+      "name": "Hiring of Persons",
+      "chunks": 38
+    },
+    "35": {
+      "name": "Zakah",
+      "chunks": 115
+    },
+    "36": {
+      "name": "Impact of Contingent Incidents on Commitments",
+      "chunks": 9
+    },
+    "37": {
+      "name": "Credit Agreement",
+      "chunks": 32
+    },
+    "38": {
+      "name": "Online Financial Dealings",
       "chunks": 26
+    },
+    "39": {
+      "name": "Mortgage and Its Contemporary Applications",
+      "chunks": 26
+    },
+    "40": {
+      "name": "Distribution of Profit in Mudarabah-Based Investment Accounts",
+      "chunks": 47
+    },
+    "41": {
+      "name": "Islamic Reinsurance",
+      "chunks": 17
+    },
+    "45": {
+      "name": "Protection of Capital and Investments",
+      "chunks": 16
     },
     "49": {
       "name": "Unilateral and Bilateral Promise",
       "chunks": 17
+    },
+    "50": {
+      "name": "Irrigation Partnership (Musaqat)",
+      "chunks": 23
+    },
+    "51": {
+      "name": "Options to Revoke Contracts Due to Incomplete Performance",
+      "chunks": 22
+    },
+    "52": {
+      "name": "Options to Reconsider (Cooling-Off Options, Either-Or",
+      "chunks": 27
+    },
+    "53": {
+      "name": "'Arboun (Earnest Money)",
+      "chunks": 11
+    },
+    "54": {
+      "name": "Revocation of Contracts by Exercise of a Cooling-Off Option",
+      "chunks": 12
     }
   },
   "source": {
     "url": "https://archive.org/details/AAOIFIShariaaStandardsENG1 (AAOIFI Shari'ah Standards, English, 2017)",
-    "file": "corpus/raw/aaoifi-standards-en-2017.txt",
-    "sha256": "600ed643c403c5e62fe0f73867635751014881742d236de450caf2ae7ed97eb5",
-    "standards_requested": [
-      "8",
-      "9",
-      "12",
-      "13",
-      "17",
-      "23",
-      "31",
-      "49"
-    ],
+    "file": "corpus/raw/aaoifi-shariah-standards-en-2017.pdf",
+    "sha256": "b10b13e094de4b59a367320404b9796f8cc11dcce01c7702ec8d7f1c49c0e8f2",
     "standards_indexed": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
       "8",
       "9",
+      "10",
+      "11",
       "12",
       "13",
+      "14",
+      "15",
+      "16",
       "17",
+      "18",
+      "19",
+      "20",
+      "21",
+      "22",
       "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "28",
+      "29",
+      "30",
       "31",
-      "49"
-    ]
+      "32",
+      "33",
+      "34",
+      "35",
+      "36",
+      "37",
+      "38",
+      "39",
+      "40",
+      "41",
+      "45",
+      "49",
+      "50",
+      "51",
+      "52",
+      "53",
+      "54"
+    ],
+    "standards_excluded": []
   }
 }

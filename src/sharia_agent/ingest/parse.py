@@ -209,6 +209,24 @@ def heading_path_for(standard: ParsedStandard, path: str) -> list[str]:
     return trail
 
 
+# A standard yielding fewer than this did not really parse — its headers were
+# damaged in the source and the numbered entries were never attributed to it.
+MIN_CLAUSES_FOR_INDEXING = 5
+
+
+def is_well_parsed(standard: ParsedStandard) -> bool:
+    """Whether a standard survived parsing well enough to be worth indexing.
+
+    Two failure signatures, both from damage in the source rather than from the
+    standard being short: the title never resolved (so `resolve_name` fell back
+    to "Standard N"), or almost no numbered entries were attributed to it.
+    Indexing either injects noise into retrieval without adding real coverage.
+    """
+    if standard.name == f"Standard {standard.number}":
+        return False
+    return len(citable_entries(standard)) >= MIN_CLAUSES_FOR_INDEXING
+
+
 def citable_entries(standard: ParsedStandard) -> list[ParsedEntry]:
     """Entries substantial enough to retrieve. Short ones stay as heading context."""
     return sorted(
