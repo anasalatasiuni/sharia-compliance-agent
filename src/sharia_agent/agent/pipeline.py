@@ -95,17 +95,12 @@ class CompliancePipeline:
         # Read after the block: span.ms is only set once the context exits.
         audit.stages.append(StageTiming(stage="intake", ms=s.ms))
 
+        # Redaction protects egress; it is not a reason to refuse the question.
+        # An analyst who pastes an account number into an otherwise sound query
+        # should get an answer about the product structure, with the identifier
+        # stripped before anything leaves the process. The count is recorded so
+        # the behaviour stays visible in the audit record.
         prior: list[Escalation] = []
-        if report.total:
-            prior.append(
-                Escalation(
-                    code=EscalationCode.ALWAYS_REVIEW_CATEGORY,
-                    detail=(
-                        "request contained personal identifiers; a compliance question "
-                        "should concern a product structure, not an individual"
-                    ),
-                )
-            )
 
         retrieved: list[RetrievedClause] = []
         draft: DraftAssessment | None = None

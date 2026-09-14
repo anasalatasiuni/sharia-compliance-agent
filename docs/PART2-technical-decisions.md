@@ -577,9 +577,18 @@ to a US-hosted model.
 **Current mitigation.** PII redaction runs on the **request path, before egress** —
 Emirates ID, IBAN, card and account numbers, phone, email, passport. Deliberately
 not on the logging path: scrubbing logs while sending raw text upstream protects
-the wrong artefact. Any request containing identifiers is additionally forced to
-`NEEDS_REVIEW`, on the reasoning that a compliance question should concern a
-product structure rather than an individual.
+the wrong artefact. The redaction count is recorded in the audit record, so a
+request that carried identifiers stays visible even though the identifiers
+themselves are not.
+
+Redaction deliberately does **not** refuse the question. An earlier version forced
+any request containing identifiers to `NEEDS_REVIEW`, reasoning that a compliance
+question should concern a product structure rather than an individual. That
+conflated two things: protecting egress, which is a data-protection control, and
+deciding whether a question is answerable, which is a product judgement. An
+analyst who pastes an account number into an otherwise sound question about
+murabaha structuring should get an answer about the structure, with the identifier
+stripped before anything leaves the process.
 
 **Why that is not sufficient.** Redaction is regex-based and therefore
 pattern-bound. "The largest depositor at our Sheikh Zayed Road branch" identifies

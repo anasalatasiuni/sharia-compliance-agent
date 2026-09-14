@@ -44,16 +44,3 @@ def redact(text: str) -> tuple[str, RedactionReport]:
         if count:
             report[label] = report.get(label, 0) + count
     return out, report
-
-
-def looks_like_customer_specific(text: str) -> bool:
-    """Heuristic: is this a question about a named customer rather than a product?
-
-    A compliance question should be about a *structure* ("can we offer a fixed
-    return on a wakala deposit"), not about an individual. When it is about an
-    individual, the request is probably in the wrong system.
-    """
-    _, report = redact(text)
-    if report.total:
-        return True
-    return bool(re.search(r"\b(customer|client)\s+(?:no\.?|number|id|#)\s*\S+", text, re.I))

@@ -164,7 +164,13 @@ async def test_upstream_failure_degrades_to_review_not_to_an_answer():
     assert any(e.code.value == "upstream_error" for e in result.assessment.escalations)
 
 
-async def test_pii_is_redacted_and_forces_review():
+async def test_pii_is_redacted_before_anything_leaves_the_process():
+    """Redaction protects egress; it does not refuse the question.
+
+    An analyst who pastes an account number into an otherwise sound query should
+    still get an answer about the product structure — with the identifier
+    stripped before it reaches an external API.
+    """
     retriever, llm = FakeRetriever(), FakeLLM(draft=good_draft())
     result = await build(retriever, llm).assess(
         query="Customer 784-1990-1234567-1 asks whether this murabaha is valid",
@@ -172,7 +178,22 @@ async def test_pii_is_redacted_and_forces_review():
     )
     assert "784-1990" not in result.assessment.query
     assert "[EMIRATES_ID_REDACTED]" in result.assessment.query
-    assert result.assessment.verdict is Verdict.NEEDS_REVIEW
+    # The question is still answered on its merits.
+    assert result.assessment.verdict is Verdict.NON_COMPLIANT
+    assert result.assessment.escalations == []
+
+
+async def test_redacted_query_is_what_reaches_retrieval():
+    """The redaction has to happen upstream of the retriever, not just in the
+    response — otherwise the identifier still reaches the embedding provider."""
+    retriever, llm = FakeRetriever(), FakeLLM(draft=good_draft())
+    await build(retriever, llm).assess(
+        query="Does IBAN AE070331234567890123456 qualify for murabaha treatment?",
+        principal_id="p",
+    )
+    searched = " ".join(c["query"] for c in retriever.calls)
+    assert "AE07033" not in searched
+    assert "IBAN_REDACTED" in searched
 
 
 async def test_audit_record_is_replayable():

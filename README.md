@@ -122,8 +122,7 @@ codes so the escalation mix can be tracked as a product metric.
 **`always_review_category`** covers matters where a machine assessment is not the
 appropriate artefact however confident it is: novel structures, capital or profit
 guarantees on profit-sharing contracts, cross-border structuring, sukuk issuance,
-requests phrased as seeking approval, and any request containing personal
-identifiers.
+requests phrased as seeking approval.
 
 ---
 
