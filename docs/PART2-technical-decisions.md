@@ -207,7 +207,81 @@ policy in perhaps 50,000 — still trivially small; Qdrant serves millions on a
 single node. **Retrieval infrastructure is not the constraint and will not become
 one.**
 
-### 2.2 What breaks first: cost
+### 2.2 What breaks first: escalation capacity
+
+Escalation is the product (§1.0), which means every escalated assessment
+consumes a human. That arithmetic is unforgiving at this volume:
+
+| Escalation rate | Reviews/day | Full-time reviewers* |
+|---:|---:|---:|
+| 10% | 5,000 | ~179 |
+| 25% | 12,500 | ~446 |
+| 35% | 17,500 | ~625 |
+
+\* 15 minutes per review, 7 productive hours per day.
+
+**No plausible staffing absorbs this.** Mal's ISSC is a committee, not a call
+centre. So the binding constraint on the product at 50,000/day is not
+infrastructure and not model spend — it is **how often the system declines to
+answer**, and that has to land in the low single digits for the target volume to
+mean anything.
+
+Three things follow, and they reorder the roadmap:
+
+1. **Deduplication is not an optimisation, it is load-bearing.** If 50,000 daily
+   queries contain 3,000 genuinely novel questions, a semantic cache (§2.3) turns
+   an impossible review queue into a feasible one. The 50k figure should be
+   interrogated before it is engineered against: it is almost certainly mostly
+   repeats.
+2. **Escalations need tiering.** Not every `NEEDS_REVIEW` needs a Shari'ah
+   scholar. `weak_retrieval` is a corpus-coverage problem for a curator;
+   `always_review_category` is a routing decision; only genuine
+   `insufficient_basis` and `conflicting_sources` need scholarly judgement. The
+   escalation codes already carry this distinction — nothing currently uses it.
+3. **Escalation rate becomes a first-class SLO**, measured and alerted on, not an
+   emergent property nobody owns.
+
+### 2.2.1 What this means for choosing a model
+
+The instinct to run a smaller model is a good one — the whole architecture was
+built to reduce dependence on model strength, and reaching for a frontier model
+can be a way of papering over retrieval that should have been fixed instead. But
+the economics do not turn on the per-token price:
+
+| | Per day at 50,000 assessments |
+|---|---|
+| Saving from Haiku 4.5 over Opus 5 | **$1,900** |
+| Cost of escalating 1pp more, at $20/review | **$10,000** |
+| Cost of escalating 5pp more | **$50,000** |
+
+**Break-even is a 0.19 percentage-point increase in escalation rate.** A cheaper
+model that is even slightly less able to reach a defensible conclusion on thin
+evidence is dramatically more expensive, and the model line item is small enough
+to be noise against the human one.
+
+So the model decision is not "which is cheaper per call" but:
+
+> **Which model escalates least, at a false-`COMPLIANT` rate of zero?**
+
+That is measurable, and measuring it costs about $2 (§3). Two specific things to
+watch in that comparison, because they are where a smaller model would fail
+without it being obvious:
+
+- **Calibration.** The `min_model_confidence` guardrail assumes self-reported
+  confidence tracks accuracy. A model that is less capable *and* overconfident
+  does not escalate more — it escalates *less*, and the extra answers are wrong.
+  That inverts the whole analysis above and is a silent failure.
+- **Conditional structure.** Shari'ah clauses are dense with provisos — "it is
+  permissible... provided that... except where...". Missing a proviso yields a
+  confident, well-cited, wrong `COMPLIANT`. Citation checks do not catch it,
+  because the citation is real.
+
+Until that comparison is run, the default stays on the stronger model — not
+because it is known to be better here, but because the failure it guards against
+is the expensive, silent one. This is a decision awaiting evidence, not a
+conclusion.
+
+### 2.3 What breaks second: model spend
 
 At current settings, per assessment:
 
@@ -221,8 +295,9 @@ At current settings, per assessment:
 
 **50,000/day ≈ $3,100/day ≈ $93,000/month ≈ $1.1M/year.**
 
-That is the number that breaks the design, and it breaks long before anything
-technical does.
+That is a real number and worth attacking, but note the ordering: it is roughly
+a fifth of what a 5-percentage-point swing in escalation rate costs (§2.2). Model
+spend is the second constraint, not the first.
 
 The useful detail is *where* the tokens are. Of the 4,250 input tokens on the
 reasoning call, **~3,200 are retrieved clauses** — which vary per query and
@@ -248,7 +323,7 @@ framework in §3 has to license, not one to make on price. A cheaper model that
 escalates more is not cheaper — escalation consumes a scholar's time, which costs
 more per hour than the model does.
 
-### 2.3 What breaks second: the request path
+### 2.4 What breaks third: the request path
 
 Each assessment holds a slot for 5–15 seconds. The current concurrency limit is a
 semaphore of 8 in a single process, so sustained throughput saturates near 1 rps —
@@ -264,7 +339,7 @@ under the 10× peak.
 - **Gateway rate limits** become a real constraint at 6 rps of Opus traffic and
   need to be negotiated ahead of the ramp, not discovered during it.
 
-### 2.4 What breaks third: state
+### 2.5 What breaks fourth: state
 
 The job store is an in-process dict. It dies with the process, is invisible to a
 second replica, and loses in-flight work on every deploy.
@@ -272,7 +347,7 @@ second replica, and loses in-flight work on every deploy.
 Replace with Redis or a proper queue (SQS/Celery/Arq). The interface in `jobs.py`
 is deliberately narrow so this is a single-file change.
 
-### 2.5 What breaks fourth: the data pipeline
+### 2.6 What breaks fifth: the data pipeline
 
 Today ingestion is a manual CLI run against a file someone downloaded. AAOIFI
 issues revisions; CBUAE issues circulars; Mal's own product policy changes weekly.
@@ -343,6 +418,11 @@ Alongside it:
 - **Calibration.** A reliability curve of stated confidence against observed
   accuracy. `min_model_confidence` is only meaningful if the confidence is
   calibrated, and it currently is not known to be.
+- **Escalation rate at a fixed false-`COMPLIANT` rate.** The metric that decides
+  model selection (§2.2.1). Comparing models on accuracy alone hides the thing
+  that actually costs money: how often each one declines to answer. Run the suite
+  against both `claude-opus-5` and `claude-haiku-4.5` and report both columns —
+  a ~$2 experiment that settles a $1,900/day question in the right direction.
 
 ### 3.3 Three test sets, kept separate
 
