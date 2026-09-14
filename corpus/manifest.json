@@ -1,0 +1,69 @@
+{
+  "corpus_version": "aaoifi-en-2017@7e97db3fac813e01",
+  "index_snapshot": "b8ad9a92f8011775",
+  "built_at": "2026-09-14T02:42:03.347407+00:00",
+  "collection": "aaoifi_standards",
+  "embed_model": "baai/bge-m3",
+  "embed_dim": 1024,
+  "chunk_count": 345,
+  "points_in_collection": 345,
+  "standards": {
+    "8": {
+      "name": "Murabahah",
+      "chunks": 63
+    },
+    "9": {
+      "name": "Ijarah and Ijarah Muntahia Bittamleek",
+      "chunks": 55
+    },
+    "12": {
+      "name": "Sharikah (Musharakah), and Modern Corporations",
+      "chunks": 66
+    },
+    "13": {
+      "name": "Mudarabah",
+      "chunks": 32
+    },
+    "17": {
+      "name": "Investment Sukuk",
+      "chunks": 45
+    },
+    "23": {
+      "name": "Agency and the Act of an Uncommissioned Agent (Fodooli)",
+      "chunks": 41
+    },
+    "31": {
+      "name": "Controls on Gharar in Financial Transactions",
+      "chunks": 26
+    },
+    "49": {
+      "name": "Unilateral and Bilateral Promise",
+      "chunks": 17
+    }
+  },
+  "source": {
+    "url": "https://archive.org/details/AAOIFIShariaaStandardsENG1 (AAOIFI Shari'ah Standards, English, 2017)",
+    "file": "corpus/raw/aaoifi-standards-en-2017.txt",
+    "sha256": "600ed643c403c5e62fe0f73867635751014881742d236de450caf2ae7ed97eb5",
+    "standards_requested": [
+      "8",
+      "9",
+      "12",
+      "13",
+      "17",
+      "23",
+      "31",
+      "49"
+    ],
+    "standards_indexed": [
+      "8",
+      "9",
+      "12",
+      "13",
+      "17",
+      "23",
+      "31",
+      "49"
+    ]
+  }
+}

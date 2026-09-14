@@ -15,6 +15,7 @@ from sharia_agent.models import (
     Citation,
     Clause,
     DraftAssessment,
+    EscalationCode,
     ModelFinding,
     RetrievedClause,
     Verdict,
@@ -172,3 +173,86 @@ def test_guardrails_can_never_produce_compliant_from_a_non_compliant_finding(set
             settings,
         )
         assert verdict is not Verdict.COMPLIANT
+
+
+# ---------------------------------------------------------------------------
+# Citation verification
+#
+# Written after the first live assessment escalated a correct answer. The clause
+# text is OCR'd and reads "concludes a urchase contract"; the model quoted it as
+# "purchase", which is right, and exact substring matching punished it. Fixing
+# that by loosening the match alone would have opened a worse hole — measured on
+# the real corpus, a negation flip scores 0.978 and a generic fragment scores a
+# perfect 1.0. Hence three independent checks.
+# ---------------------------------------------------------------------------
+
+OCR_CLAUSE = (
+    "The Institution shall not sell any item in a Murabahah transaction before it "
+    "acquires such item. Hence, it is not valid for the Institution to conclude a "
+    "Murabahah sale with the customer before the Institution concludes a urchase "
+    "contract with the supplier of the item the subject matter of the Murabahah and "
+    "before it acquires actual or constructive possession of such items"
+)
+
+
+def cited(quote: str, chunk_id: str = "SS8-3.1.1") -> DraftAssessment:
+    return draft(citations=[Citation(chunk_id=chunk_id, quote=quote, supports="x")])
+
+
+def ocr_retrieved() -> list[RetrievedClause]:
+    return [RetrievedClause(clause=clause(text=OCR_CLAUSE), rerank_score=0.95)]
+
+
+def test_quote_survives_an_ocr_defect_in_the_source(settings):
+    """The regression this whole section exists for: a model that silently
+    corrects 'urchase' to 'purchase' is quoting correctly, not fabricating."""
+    quote = OCR_CLAUSE.replace("a urchase", "a purchase")
+    _, escalations = guardrails.decide("q", cited(quote), ocr_retrieved(), settings)
+    assert escalations == [], escalations
+
+
+@pytest.mark.parametrize(
+    ("label", "quote"),
+    [
+        ("negation flip", OCR_CLAUSE[:95].replace("shall not sell", "may sell")),
+        ("dropped negation", OCR_CLAUSE[:95].replace("shall not sell", "shall sell")),
+        ("modal weakened", OCR_CLAUSE[:95].replace("shall not", "may not")),
+    ],
+)
+def test_quote_that_alters_legal_force_is_caught(settings, label, quote):
+    """Character similarity cannot catch these — the negation flip scores 0.978
+    against the clause it misquotes. Polarity alignment is what catches them."""
+    verdict_, escalations = guardrails.decide("q", cited(quote), ocr_retrieved(), settings)
+    assert verdict_ is Verdict.NEEDS_REVIEW, label
+    assert any(e.code is EscalationCode.UNRESOLVED_CITATION for e in escalations), label
+
+
+def test_quote_too_short_to_be_evidence_is_caught(settings):
+    """'the Institution and the customer' is genuinely verbatim and scores 1.0,
+    but carries no evidential weight."""
+    verdict_, escalations = guardrails.decide(
+        "q", cited("the Institution and the customer"), ocr_retrieved(), settings
+    )
+    assert verdict_ is Verdict.NEEDS_REVIEW
+    assert escalations
+
+
+def test_quote_from_a_different_clause_is_caught(settings):
+    other = "It is obligatory that the Institutions actual or constructive possession"
+    verdict_, escalations = guardrails.decide("q", cited(other), ocr_retrieved(), settings)
+    assert verdict_ is Verdict.NEEDS_REVIEW
+    assert any(e.code is EscalationCode.UNRESOLVED_CITATION for e in escalations)
+
+
+@pytest.mark.parametrize("span", ["leading", "middle", "trailing"])
+def test_partial_quotes_on_word_boundaries_are_accepted(settings, span):
+    """A quote is a fragment; clause text outside the quoted span must not read
+    as the quote having altered something."""
+    words = OCR_CLAUSE.split()
+    quote = {
+        "leading": " ".join(words[:22]),
+        "middle": " ".join(words[22:52]),
+        "trailing": " ".join(words[-28:]),
+    }[span]
+    _, escalations = guardrails.decide("q", cited(quote), ocr_retrieved(), settings)
+    assert escalations == [], (span, escalations)

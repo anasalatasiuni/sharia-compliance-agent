@@ -92,7 +92,8 @@ class CompliancePipeline:
                 log("pii.redacted", categories=dict(report), count=report.total)
             s.annotate(redactions=report.total)
             audit.query = safe_query if self.settings.log_full_prompts else None
-            audit.stages.append(StageTiming(stage="intake", ms=s.ms))
+        # Read after the block: span.ms is only set once the context exits.
+        audit.stages.append(StageTiming(stage="intake", ms=s.ms))
 
         prior: list[Escalation] = []
         if report.total:
@@ -111,7 +112,10 @@ class CompliancePipeline:
 
         try:
             # ---- 2 RETRIEVE + 3 REFINE -----------------------------------
-            retrieved = await self._gather_evidence(safe_query, audit)
+            with span("evidence") as s:
+                retrieved = await self._gather_evidence(safe_query, audit)
+                s.annotate(clauses=len(retrieved))
+            audit.stages.append(StageTiming(stage="evidence", ms=s.ms))
 
             if retrieved:
                 audit.corpus_version = retrieved[0].clause.corpus_version
@@ -154,7 +158,7 @@ class CompliancePipeline:
                 verdict=verdict.value,
                 escalations=[e.code.value for e in escalations],
             )
-            audit.stages.append(StageTiming(stage="guardrails", ms=s.ms))
+        audit.stages.append(StageTiming(stage="guardrails", ms=s.ms))
 
         audit.draft = draft
         audit.final_verdict = verdict
@@ -344,8 +348,8 @@ class CompliancePipeline:
                 confidence=draft.confidence if draft else None,
                 citations=len(draft.citations) if draft else 0,
             )
-            audit.stages.append(StageTiming(stage="reason", ms=s.ms))
-            return draft
+        audit.stages.append(StageTiming(stage="reason", ms=s.ms))
+        return draft
 
     # -- shared ------------------------------------------------------------
 

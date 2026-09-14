@@ -12,6 +12,7 @@ model can make the system noisier, but not more permissive.
 
 from __future__ import annotations
 
+import difflib
 import re
 
 from ..config import Settings
@@ -69,10 +70,86 @@ ALWAYS_REVIEW: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 _WS = re.compile(r"\s+")
+_WORD = re.compile(r"[a-z0-9]+")
+
+# Quote checking answers two separate questions, and one metric cannot do both.
+#
+#   PROVENANCE  — is this text really from the clause it names?
+#   POLARITY    — does it say the same thing the clause says?
+#   SUBSTANCE   — is it enough text to be evidence at all?
+#
+# Character containment answers provenance well: a quote lifted from a different
+# clause scores 0.47-0.76 against the one it claims. It answers the other two not
+# at all. Measured on this corpus, a negation flip ("shall not sell" -> "may
+# sell") scores 0.978 and the fragment "the Institution and the customer" scores
+# a perfect 1.0 because it is genuinely a substring. No single threshold
+# separates those from a true quote at 0.998, so all three run.
+QUOTE_SIMILARITY_FLOOR = 0.92
+MIN_QUOTE_WORDS = 8
+
+# Tokens that carry the legal force of a clause. If one of these is introduced,
+# dropped or swapped inside the span a quote claims to reproduce, the quote
+# asserts something the clause does not — the single most dangerous way for a
+# citation to be wrong, because it is otherwise near-identical.
+_POLARITY = frozenset({
+    "not", "no", "never", "nor", "without", "unless", "except",
+    "shall", "must", "may", "should", "cannot",
+    "permissible", "impermissible", "permitted", "prohibited", "forbidden",
+    "obligatory", "valid", "invalid", "void", "required", "allowed",
+})
 
 
 def _norm(text: str) -> str:
     return _WS.sub(" ", text).strip().lower()
+
+
+def _words(text: str) -> list[str]:
+    return _WORD.findall(_norm(text))
+
+
+def quote_containment(quote: str, clause_text: str) -> float:
+    """Fraction of `quote` recoverable from `clause_text`, preserving order."""
+    q, c = _norm(quote), _norm(clause_text)
+    if not q:
+        return 0.0
+    if q in c:
+        return 1.0
+    # autojunk treats common characters as noise in long strings and would
+    # deflate the score on exactly the long quotes that matter most.
+    matcher = difflib.SequenceMatcher(None, q, c, autojunk=False)
+    return sum(block.size for block in matcher.get_matching_blocks()) / len(q)
+
+
+def polarity_mismatch(quote: str, clause_text: str) -> str | None:
+    """Name a legal-force token the quote changes, or None if polarity holds.
+
+    Aligns the quote against the clause token-wise and inspects only the edits
+    *inside* the span the quote covers. Leading and trailing deletions are the
+    rest of the clause and are expected; an edit in the middle that touches a
+    polarity token is the quote rewriting the rule.
+    """
+    q_words, c_words = _words(quote), _words(clause_text)
+    if not q_words:
+        return None
+
+    opcodes = difflib.SequenceMatcher(None, q_words, c_words, autojunk=False).get_opcodes()
+    interior = [op for op in opcodes if op[0] != "equal"]
+    # A quote is a fragment, so the clause text before and after the span it
+    # covers appears as an `insert` at either end (tokens in the clause, absent
+    # from the quote). Those are expected; only edits *within* the span mean the
+    # quote has rewritten something.
+    if interior and interior[0][0] == "insert" and interior[0][1] == 0:
+        interior = interior[1:]
+    if interior and interior[-1][0] == "insert" and interior[-1][1] == len(q_words):
+        interior = interior[:-1]
+
+    for tag, i1, i2, j1, j2 in interior:
+        touched = set(q_words[i1:i2]) | set(c_words[j1:j2])
+        if offending := touched & _POLARITY:
+            got = " ".join(q_words[i1:i2]) or "(nothing)"
+            expected = " ".join(c_words[j1:j2]) or "(nothing)"
+            return f"{tag} of {sorted(offending)}: quote says {got!r}, clause says {expected!r}"
+    return None
 
 
 def verify_citations(
@@ -83,6 +160,8 @@ def verify_citations(
     Quote verification is the cheap half of faithfulness checking: a fabricated
     or drifted quote is caught here without a second model call. It does not
     prove the reasoning is sound, only that the evidence it names is real.
+
+    Matching is fuzzy rather than exact — see QUOTE_SIMILARITY_FLOOR for why.
     """
     by_id = {r.clause.chunk_id: r.clause for r in retrieved}
     problems: list[Escalation] = []
@@ -101,14 +180,38 @@ def verify_citations(
             )
             continue
 
-        quote = _norm(citation.quote)
-        if quote and quote not in _norm(clause.text):
+        if not citation.quote:
+            continue
+
+        score = quote_containment(citation.quote, clause.text)
+        if score < QUOTE_SIMILARITY_FLOOR:
             problems.append(
                 Escalation(
                     code=EscalationCode.UNRESOLVED_CITATION,
                     detail=(
-                        f"quoted text does not appear verbatim in {citation.chunk_id} "
-                        f"({citation.quote[:70]!r})"
+                        f"quote is only {score:.0%} recoverable from {citation.chunk_id} "
+                        f"(floor {QUOTE_SIMILARITY_FLOOR:.0%}): {citation.quote[:70]!r}"
+                    ),
+                )
+            )
+            continue
+
+        if (mismatch := polarity_mismatch(citation.quote, clause.text)) is not None:
+            problems.append(
+                Escalation(
+                    code=EscalationCode.UNRESOLVED_CITATION,
+                    detail=f"quote alters the force of {citation.chunk_id} — {mismatch}",
+                )
+            )
+            continue
+
+        if len(_words(citation.quote)) < MIN_QUOTE_WORDS:
+            problems.append(
+                Escalation(
+                    code=EscalationCode.NO_CITATIONS,
+                    detail=(
+                        f"quote from {citation.chunk_id} is too short to be evidence "
+                        f"({len(_words(citation.quote))} words, minimum {MIN_QUOTE_WORDS})"
                     ),
                 )
             )
