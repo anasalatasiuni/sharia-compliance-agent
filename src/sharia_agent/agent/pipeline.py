@@ -203,6 +203,18 @@ class CompliancePipeline:
         )
         return PipelineResult(assessment=assessment, audit=audit)
 
+    def _loggable(self, text: str) -> str | None:
+        """Query text, or None when the deployment forbids retaining it.
+
+        Applied everywhere a query reaches the audit record, not just to
+        `audit.query`. The retrieval rounds carry the query too, and the whole
+        record is emitted as a log event — so guarding one field and not the
+        others meant SCA_LOG_FULL_PROMPTS did not do what its name promises.
+        `query_hash` remains either way, which is what correlation actually
+        needs.
+        """
+        return text if self.settings.log_full_prompts else None
+
     # -- stages 2 & 3 ------------------------------------------------------
 
     async def _gather_evidence(
@@ -221,7 +233,8 @@ class CompliancePipeline:
         for item in seed:
             collected[item.clause.chunk_id] = item
         audit.retrieval_rounds.append(
-            {"round": 1, "query": query, "source": "seed", "hits": len(seed)}
+            {"round": 1, "query": self._loggable(query), "source": "seed",
+             "hits": len(seed)}
         )
 
         budget = self.settings.max_retrieval_rounds - 1
@@ -296,7 +309,7 @@ class CompliancePipeline:
                 audit.retrieval_rounds.append(
                     {
                         "round": round_no,
-                        "query": sub_query,
+                        "query": self._loggable(sub_query),
                         "standard_no": standard_no,
                         "reason": args.get("reason"),
                         "hits": len(hits),

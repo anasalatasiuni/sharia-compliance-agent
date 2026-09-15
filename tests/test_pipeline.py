@@ -218,3 +218,32 @@ async def test_invalid_model_output_escalates():
     result = await build(retriever, llm).assess(query="a murabaha question", principal_id="p")
     assert result.assessment.verdict is Verdict.NEEDS_REVIEW
     assert any(e.code.value == "schema_validation_failed" for e in result.assessment.escalations)
+
+
+async def test_prod_mode_keeps_query_text_out_of_the_audit_record():
+    """SCA_LOG_FULL_PROMPTS=false must hold for the whole record, not one field.
+
+    The audit record is emitted as a log event, and the retrieval rounds carry
+    the query as well as `audit.query`. Guarding only the latter left the text in
+    operational logs while the setting claimed otherwise — found when a container
+    running with the flag off still logged two lines containing the query.
+    """
+    import json
+
+    secret = "unmistakable-marker-9f3a"
+    retriever, llm = FakeRetriever(), FakeLLM(draft=good_draft())
+    result = await build(retriever, llm, log_full_prompts=False).assess(
+        query=f"Is {secret} an acceptable murabaha structure?", principal_id="p"
+    )
+    serialised = json.dumps(result.audit.model_dump(mode="json"))
+    assert secret not in serialised, "query text leaked into the audit record"
+    # The hash survives, so a request is still correlatable without retaining it.
+    assert result.audit.query_hash
+
+
+async def test_dev_mode_keeps_the_query_for_debugging():
+    retriever, llm = FakeRetriever(), FakeLLM(draft=good_draft())
+    result = await build(retriever, llm, log_full_prompts=True).assess(
+        query="Is this an acceptable murabaha structure?", principal_id="p"
+    )
+    assert result.audit.query is not None

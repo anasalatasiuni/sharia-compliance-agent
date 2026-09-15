@@ -171,8 +171,8 @@ source exists to switch to; a structured edition would carry the same text.
 
 The consequence shaped a control. Citation checking cannot demand character-perfect
 equality with the source, because the source is not character-perfect. It instead
-verifies provenance fuzzily, polarity exactly, and substance by length (§4 of
-`CODE-WALKTHROUGH.md`). The first live assessment proved the point: a correct
+verifies provenance fuzzily, polarity exactly, and substance by length
+(`agent/guardrails.py`). The first live assessment proved the point: a correct
 verdict with three accurate citations was escalated because the model had silently
 corrected the typo while quoting.
 

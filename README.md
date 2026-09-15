@@ -222,8 +222,8 @@ PDF, under every extraction mode, and it is the only dropped-letter instance in
 cleaner source fixes it.
 
 That is why citation checking tolerates imperfect source text rather than
-demanding character-perfect equality (see *Checking the quotes* in
-`docs/CODE-WALKTHROUGH.md`). Mal will eventually index its own term sheets and
+demanding character-perfect equality (`agent/guardrails.py`). Mal will eventually
+index its own term sheets and
 counsel memos, which will be far messier than AAOIFI's typesetting. A system that
 requires a clean corpus is one that breaks on contact with production.
 
@@ -353,6 +353,85 @@ Returns `503` when the index is empty, a credential is missing, or a circuit
 breaker is open.
 
 ---
+
+## Deployment
+
+The API runs on Render's free tier; Qdrant Cloud's free tier holds the index.
+They are separate because Render's free web service has no persistent disk, so
+the index has to live somewhere it survives a restart.
+
+The service idles at ~148 MB against Render's 512 MB, and the index is ~5 MB of
+vectors against Qdrant's 1 GB — neither is close to a limit.
+
+### 1. Index a Qdrant Cloud cluster
+
+Create a free cluster (no card required), then ingest against it rather than
+against localhost:
+
+```bash
+SCA_QDRANT_URL=https://<cluster>.<region>.cloud.qdrant.io:6333 \
+SCA_QDRANT_API_KEY=<key> \
+python -m sharia_agent.ingest.cli --recreate
+```
+
+### 2. Deploy
+
+Push the repo to GitHub, then create a Render web service from
+[`deploy/render.yaml`](deploy/render.yaml). Set the four `sync: false` variables
+in the dashboard:
+
+| variable | |
+|---|---|
+| `OPENROUTER_API_KEY` | Prefer a key funded with a small balance. It is the only control that fails closed if the bearer token is ever forwarded. |
+| `SCA_QDRANT_URL` | the cluster URL |
+| `SCA_QDRANT_API_KEY` | the cluster key |
+| `SCA_PRINCIPALS` | **Not the demo token.** See below. |
+
+### 3. Use a token that is not in this repo
+
+`.env.example` is committed, so `demo-token-analyst` is public and worthless as
+an access control. Generate a real one:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(32))"
+# SCA_PRINCIPALS=<token>:reviewer@mal.ae:assess
+```
+
+### 4. Keep the cluster alive
+
+[`.github/workflows/keepalive.yml`](.github/workflows/keepalive.yml) pings
+`/health` once a day. Set the repository variable `DEPLOY_URL` to enable it.
+
+This is not about the cold start. **Qdrant Cloud suspends a free cluster after a
+week idle and deletes it after four** — and the failure is silent: the URL still
+resolves, `/health` just starts reporting an empty index. A daily request
+prevents that at no cost. One ping covers both services, because `/health`
+queries the collection.
+
+Preventing Render's 15-minute spin-down would be a different matter: staying
+awake is ~720 hours against a 750-hour monthly allowance. Not worth the entire
+budget to avoid one minute of waiting, so **the first request after idle takes
+about a minute.** Subsequent ones are normal.
+
+### Verifying a deployment
+
+```bash
+curl -s https://<your-service>.onrender.com/health | jq   # expect points: 1518
+curl -sS -X POST https://<your-service>.onrender.com/assess \
+  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+  -d '{"query": "Can Mal offer a savings account paying a fixed 4% annual return?"}'
+```
+
+`/health` returning `503` with `manifest_mismatch` means the service is pointed at
+a different index than the one it was built against — re-run the ingest, or fix
+`SCA_QDRANT_URL`.
+
+### What this deployment is not
+
+A demo. `SCA_ENV=prod` only tightens logging; the posture described in
+[`docs/PART2-technical-decisions.md`](docs/PART2-technical-decisions.md) §5 —
+in-country inference under CBUAE residency rules, OIDC instead of static tokens,
+audit records on WORM storage — is not what is running here.
 
 ## Configuration
 

@@ -1,0 +1,49 @@
+# Keeps the free-tier deployment from decaying.
+#
+# Two clocks, and only one of them is worth paying for:
+#
+#   Qdrant Cloud free clusters suspend after a week idle and are DELETED after
+#   four. A submission can easily sit unreviewed that long, and the failure is
+#   silent — the URL still resolves, /health just starts returning 503 with an
+#   empty index. A daily request prevents it at no cost.
+#
+#   Render free services spin down after 15 minutes, so preventing the ~60s cold
+#   start would mean pinging around the clock: ~720 hours against a 750-hour
+#   monthly allowance. Not worth spending the entire budget to avoid one minute
+#   of waiting, so the cold start is documented instead.
+#
+# /health is the right target: it queries the collection, so one request keeps
+# both the web service and the Qdrant cluster marked active.
+name: keepalive
+
+on:
+  schedule:
+    - cron: "17 6 * * *"   # daily, off the hour — scheduled runs bunch on :00
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wake the service and the vector store
+        env:
+          URL: ${{ vars.DEPLOY_URL }}
+        run: |
+          if [ -z "$URL" ]; then
+            echo "::warning::DEPLOY_URL repository variable is not set; nothing to ping."
+            exit 0
+          fi
+          # Cold start takes about a minute, so allow for it rather than
+          # reporting a false failure.
+          code=$(curl -sS -o /tmp/health.json -w '%{http_code}' \
+                 --max-time 120 --retry 3 --retry-delay 20 "$URL/health" || echo 000)
+          echo "HTTP $code"
+          cat /tmp/health.json 2>/dev/null || true
+          echo
+          # 503 means the service is up but degraded — still counts as activity
+          # for both platforms, and is worth surfacing rather than failing on.
+          case "$code" in
+            200) echo "healthy" ;;
+            503) echo "::warning::service is up but degraded — check the index" ;;
+            *)   echo "::error::unexpected status $code"; exit 1 ;;
+          esac

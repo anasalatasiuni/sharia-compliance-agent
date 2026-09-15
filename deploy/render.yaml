@@ -1,30 +1,35 @@
-# Render blueprint.
+# Render blueprint — https://render.com/docs/blueprint-spec
 #
-# Note the instance size: the default free tier is 512 MB, which is enough for
-# the `llm` rerank backend but not for `local` (bge-reranker-v2-m3 needs ~560 MB
-# resident plus headroom). Moving reranking in-process — which is what stops
-# clause text leaving the jurisdiction — means paying for the RAM.
+# Deploys the API only. Qdrant is a separate managed cluster (Qdrant Cloud free
+# tier), because Render's free web service has no persistent disk and the index
+# must survive a restart.
 services:
   - type: web
     name: sharia-compliance-agent
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: starter            # 512MB free tier cannot host the local reranker
-    healthCheckPath: /health/live   # liveness, not readiness — readiness 503s
-                                    # before the index is built, which would
-                                    # block the first deploy
+    plan: free              # the service idles at ~148MB; free gives 512MB
+    region: frankfurt       # closest free region to the UAE
+    healthCheckPath: /health/live
+    # /health is *readiness* and returns 503 before the index is reachable,
+    # which would make Render treat a healthy instance as failed during a cold
+    # start. Liveness is the right probe for the platform; readiness is for us.
     envVars:
       - key: OPENROUTER_API_KEY
-        sync: false          # set in the dashboard; never in the blueprint
+        sync: false         # set in the dashboard, never in the repo
       - key: SCA_QDRANT_URL
-        sync: false          # Qdrant Cloud cluster URL
+        sync: false         # https://<cluster>.<region>.cloud.qdrant.io:6333
       - key: SCA_QDRANT_API_KEY
         sync: false
-      - key: SCA_ENV
-        value: staging
-      - key: SCA_LOG_FULL_PROMPTS
-        value: "false"       # query text must not reach operational logs
-      - key: SCA_RERANK_BACKEND
-        value: llm           # switch to `local` once on an instance with RAM
       - key: SCA_PRINCIPALS
-        sync: false          # demo tokens only; real deployment uses OIDC
+        sync: false         # NOT the demo token from .env.example — see README
+      - key: SCA_ENV
+        value: prod
+      - key: SCA_LOG_FULL_PROMPTS
+        value: "false"      # query text must not reach operational logs
+      - key: SCA_RERANK_BACKEND
+        value: llm          # `local` needs ~560MB more than the free tier has
+      - key: SCA_MODEL
+        value: anthropic/claude-haiku-4.5
+      - key: SCA_MODEL_EFFORT
+        value: none         # Haiku 4.5 predates reasoning-effort
