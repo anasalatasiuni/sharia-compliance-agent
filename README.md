@@ -414,11 +414,31 @@ months later:
 trace_id · assessment_id · principal_id · query_hash
 corpus_version · index_snapshot · model · model_effort · prompt_version
 retrieval_rounds[]   each query, why it was issued, how many hits
-retrieved[]          chunk_id + dense / sparse / fused / rerank scores
+retrieved[]          chunk_id + fused (RRF) and rerank scores
 draft                the model's finding, confidence, citations
 final_verdict · escalations[]
 stages[]             per-stage latency
 usage                tokens across every call the assessment made
+```
+
+Per-arm scores are deliberately **not** stored. Qdrant's fusion returns a single
+merged score, and recovering the dense and sparse ranks separately would cost two
+extra queries on every request to serve the small fraction ever investigated.
+They are reconstructible on demand instead — `index_snapshot` pins the index, so
+any past retrieval can be replayed:
+
+```bash
+python scripts/retrieval_debug.py "<the query>" --expect SS8-3.1.1
+```
+
+which reports each arm's rank separately and names the failure:
+
+```
+  SS8-3.1.1
+    dense  : rank 25          <- the lexical arm carried this query
+    sparse : rank 4
+    fused  : rank 6
+    ranked : rank 1           <- the reranker promoted it five places
 ```
 
 Pinning `corpus_version` and `prompt_version` is the point: without them you
