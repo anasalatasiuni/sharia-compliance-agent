@@ -20,8 +20,15 @@ from collections import Counter
 from dataclasses import dataclass, field
 
 # "Shariah Standard No. (8): Murabahah" — also appears as a running page header.
+# The period after "No" is optional because the publisher is inconsistent about
+# it: title pages read "Standard No. (46)" while the running page headers read
+# "Standard No (46)". Requiring the period matched only the title page, whose
+# title sits on the *next* line, so frequency voting had nothing to vote on, the
+# name fell back to "Standard N", and six standards (42, 43, 44, 46, 47, 48)
+# were dropped as unparseable while their text was silently absorbed by whatever
+# standard was current. Pinned by tests/test_ingest.py.
 STANDARD_HEADER = re.compile(
-    r"^Shari[''’]?ah\s+Standard\s+No\.\s*\(\s*(\d+)\s*\)\s*[:.]?\s*(.*)$", re.IGNORECASE
+    r"^Shari[''’]?ah\s+Standard\s+No\.?\s*\(\s*(\d+)\s*\)\s*[:.]?\s*(.*)$", re.IGNORECASE
 )
 
 # "2/2/2 It is essential to exclude ..." — a numbered entry opening a line.
