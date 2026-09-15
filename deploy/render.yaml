@@ -11,9 +11,19 @@ services:
     plan: free              # the service idles at ~148MB; free gives 512MB
     region: frankfurt       # closest free region to the UAE
     healthCheckPath: /health/live
-    # /health is *readiness* and returns 503 before the index is reachable,
-    # which would make Render treat a healthy instance as failed during a cold
-    # start. Liveness is the right probe for the platform; readiness is for us.
+    # Liveness, not readiness, and the reason is not cold starts — /health in
+    # fact answers 200 from its first response, because the index lives in the
+    # managed cluster and needs no warming.
+    #
+    # The reason is what happens when Qdrant is down. /health queries the
+    # collection, so it answers 503, and Render responds to a failing health
+    # check by restarting the instance — which fixes nothing, since the fault is
+    # in a third party we cannot restart, and adds a cold start to an outage
+    # already in progress. A platform's restart decision must not depend on a
+    # dependency the platform cannot repair.
+    #
+    # It is also 320ms against 1ms per probe, repeatedly, on a free cluster.
+    # Readiness stays ours to poll deliberately; liveness is the platform's.
     envVars:
       - key: OPENROUTER_API_KEY
         sync: false         # set in the dashboard, never in the repo
