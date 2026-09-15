@@ -40,7 +40,7 @@ class Principal:
 bearer_scheme = HTTPBearer(
     auto_error=False,
     scheme_name="Bearer token",
-    description="Supplied with the submission. Paste the token alone, without the word Bearer.",
+    description="Any token in SCA_PRINCIPALS. Paste the token alone, without the word Bearer.",
 )
 
 

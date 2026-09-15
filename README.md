@@ -1,10 +1,5 @@
 # Shari'ah Compliance Agent
 
-**Live:** [https://shariacomplianceagent-agay4f9w.b4a.run](https://shariacomplianceagent-agay4f9w.b4a.run) · [`/health`](https://shariacomplianceagent-agay4f9w.b4a.run/health) · [`/docs`](https://shariacomplianceagent-agay4f9w.b4a.run/docs)
-Open the URL and it lands on interactive docs — **Authorize** with the token
-supplied alongside this submission, then run a real assessment from the browser.
-`GET /health` needs no token.
-
 Decision support for Mal's internal compliance team. Give it a proposed product
 or transaction in plain English; it returns an evidence-backed preliminary
 assessment against the AAOIFI Shari'ah Standards, with every claim cited to a
@@ -234,23 +229,47 @@ requires a clean corpus is one that breaks on contact with production.
 
 ## Quick start
 
-**Prerequisites:** Python 3.12+, Docker, and an
-[OpenRouter](https://openrouter.ai) API key. That key is the only credential
-needed — it serves both reasoning and embeddings. Qdrant runs locally.
-
 ```bash
 git clone <repo> && cd sharia-compliance-agent
-
-cp .env.example .env
-$EDITOR .env                      # set OPENROUTER_API_KEY
-
-uv venv --python 3.12
-uv pip install -e ".[dev]"
-
-docker compose up -d qdrant       # vector store on :6333
+./scripts/bootstrap.sh          # starts Qdrant, restores the prebuilt index
+$EDITOR .env                    # add OPENROUTER_API_KEY
+docker compose up api
 ```
 
-### Fetch the corpus
+Then:
+
+```bash
+curl -s localhost:8000/health | jq          # expect points: 1518
+
+curl -sS -X POST localhost:8000/assess \
+  -H "Authorization: Bearer demo-token-analyst" \
+  -H "Content-Type: application/json" \
+  -d '{"query": "Can Mal offer a savings account paying a fixed 4% annual return?"}'
+```
+
+The index ships with the repo as a Qdrant snapshot, so nothing has to be
+re-embedded. An OpenRouter key is needed only for the reasoning and reranking
+calls — about $0.02 per assessment. Retrieval can be exercised for free:
+
+```bash
+python scripts/retrieval_debug.py "can we sell before we own it" \
+  --expect SS8-3.1.1 --no-rerank
+```
+
+### Running without Docker
+
+```bash
+uv venv --python 3.12 && uv pip install -e ".[dev]"
+docker compose up -d qdrant && ./scripts/bootstrap.sh
+uvicorn sharia_agent.api.main:app --reload
+```
+
+### Rebuilding the index
+
+Only needed if the corpus changes — the shipped snapshot is built from exactly
+these steps. Costs ~$0.04 and needs the source PDF.
+
+#### Fetch the corpus
 
 Not committed — 12 MB of third-party standards. Ingestion reads the PDF directly
 and shells out to `pdftotext`, so you also need poppler.
@@ -263,7 +282,7 @@ curl -L -o corpus/raw/aaoifi-shariah-standards-en-2017.pdf \
   "https://archive.org/download/AAOIFIShariaaStandardsENG1/AAOIFI_Shariaa-Standards-ENG%201.pdf"
 ```
 
-### Build the index
+#### Build the index
 
 ```bash
 python -m sharia_agent.ingest.cli --dry-run   # parse + chunk, no API calls, free
@@ -278,12 +297,6 @@ replayable — and what invalidates any cache keyed on the snapshot the moment t
 corpus is re-indexed.
 
 `--standards 8 9 13` indexes a subset; omit it for everything that parses cleanly.
-
-### Run
-
-```bash
-uvicorn sharia_agent.api.main:app --reload     # http://localhost:8000/docs
-```
 
 ---
 
@@ -424,16 +437,14 @@ about a minute.** Subsequent ones are normal.
 ### Verifying a deployment
 
 ```bash
-curl -s https://shariacomplianceagent-agay4f9w.b4a.run/health | jq        # expect points: 1518
+DEPLOY_URL=https://<your-instance>
 
-curl -sS -X POST https://shariacomplianceagent-agay4f9w.b4a.run/assess \
+curl -s $DEPLOY_URL/health | jq                 # expect points: 1518
+
+curl -sS -X POST $DEPLOY_URL/assess \
   -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
   -d '{"query": "Can Mal offer a savings account paying a fixed 4% annual return?"}'
 ```
-
-The instance runs on Back4App Containers, with the index in a Qdrant Cloud free
-cluster. First request after a quiet period may be slow while the container
-wakes; `/health` is the cheapest way to warm it.
 
 `/health` returning `503` with `manifest_mismatch` means the service is pointed at
 a different index than the one it was built against — re-run the ingest, or fix
@@ -560,7 +571,30 @@ rather than to an answer.
 
 ## Tools
 
-Two scripts, both outside the request path.
+All of these run outside the request path.
+
+### `scripts/bootstrap.sh` — a working index without re-embedding
+
+Starts Qdrant and restores `corpus/aaoifi_standards.snapshot.gz`, the prebuilt
+index committed with the repo. Idempotent: if the collection already holds points
+it leaves them alone.
+
+```bash
+./scripts/bootstrap.sh          # ~10s, no API key, no cost
+```
+
+Re-embedding the corpus instead costs ~$0.04 and needs the source PDF, so this is
+the path for anyone who wants to read the system rather than rebuild it. The
+snapshot carries the payload indexes with it — `standard_no`, `standard_name`,
+`corpus_version`, `lang`, `is_superseded` — which is what makes the metadata
+filters run inside the ANN traversal rather than after it.
+
+### `scripts/clauses.py` — browse the corpus
+
+```bash
+python scripts/clauses.py --standard 8 | head          # clauses of SS 8
+python scripts/clauses.py --exists SS8-3.1.1           # verify a gold id
+```
 
 ### `scripts/preflight.py` — verify the provider before spending
 
@@ -612,6 +646,13 @@ The last row matters most when building an eval: a mistyped gold clause id fails
 exactly like a retrieval miss, and chasing the wrong one costs an afternoon.
 
 ## Known limitations
+
+**No live URL.** Free container hosting without a payment method has effectively
+ended: Render, Koyeb and Fly all require a card, Hugging Face Spaces made the
+Docker runtime paid in July 2026, and Back4App's free URLs expire after 60
+minutes. The deployment path in [Deployment](#deployment) is the one that was
+exercised against Qdrant Cloud, and `./scripts/bootstrap.sh && docker compose up`
+brings the whole system up locally with the index already populated.
 
 **Corpus is one edition, English only.** All 48 standards that parse cleanly are
 indexed, but that is still a single 2017 edition with no CBUAE circulars, no HSA
