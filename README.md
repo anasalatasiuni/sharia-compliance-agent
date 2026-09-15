@@ -10,30 +10,27 @@ specific clause.
 > Committee (ISSC). This system triages and prepares a defensible memo for that
 > committee. `NEEDS_REVIEW` is its primary output, not its failure mode.
 
----
-
 ## The central design decision
 
-The brief asks for an "AI agent". For a compliance verdict, an *autonomous*
-agent is the wrong shape, and the difference is the whole architecture:
+The brief asks for an AI agent, and this is one: it plans its own retrieval,
+judges whether the evidence it has is enough, and searches again when it is not.
+The design decision that shaped everything else is where that agency stops.
 
 > **The model has genuine agency over what evidence to gather, and none over how
 > the verdict is decided.**
 
 It can reformulate a question into the vocabulary the standards actually use, and
 it can search again. It cannot choose the control flow, and it has no `verdict`
-field to fill in. The two places a verdict is decided — Gate A and Gate B — are
+field to fill in. The two places a verdict is decided, Gate A and Gate B, are
 ordinary Python that calls no model.
 
-This buys three things a ReAct loop cannot:
-
-| | |
-|---|---|
-| **Reproducibility** | An unbounded loop takes a different trajectory each run. A regulator asking "why did it say this?" needs the same answer twice. |
-| **Auditability** | The control flow is 200 lines you can read, not a framework's internals. |
-| **Asymmetric safety** | Guardrails only ever escalate. A model regression can make the system noisier; it cannot make it more permissive. |
-
----
+That buys three things a ReAct loop cannot. **Reproducibility**, because an
+unbounded loop takes a different trajectory each run and a regulator asking "why
+did it say this?" needs the same answer twice. **Auditability**, because the
+control flow and the gates are ~800 lines of ordinary Python you can read end to
+end rather than a framework's internals. And
+**asymmetric safety**, because guardrails only ever escalate, so a model
+regression can make the system noisier but cannot make it more permissive.
 
 ## Architecture
 
@@ -88,155 +85,19 @@ This buys three things a ReAct loop cannot:
   ══ double border = decides a verdict, calls no model
 ```
 
-### Two vocabularies, deliberately separated
-
-The model returns a **finding** about *evidence*. Deterministic code maps that
-onto the **verdict** the service returns. There is no code path where a guardrail
-produces `COMPLIANT`.
-
-```
-  model may return              code decides
-  ──────────────────            ─────────────
-  SUPPORTED_COMPLIANT      ──▶  COMPLIANT      (only if every gate passes)
-  SUPPORTED_NON_COMPLIANT  ──▶  NON_COMPLIANT  (only if every gate passes)
-  INSUFFICIENT_BASIS       ──▶  NEEDS_REVIEW
-  CONFLICTING_SOURCES      ──▶  NEEDS_REVIEW
-                           ──▶  NEEDS_REVIEW   ← any guardrail firing
-```
-
-### Escalation triggers
-
-`NEEDS_REVIEW` is produced by code, for reasons that are recorded as machine-readable
-codes so the escalation mix can be tracked as a product metric.
-
-| Code | Meaning |
-|---|---|
-| `weak_retrieval` | Top reranked clause below the score floor, or ranking unverified |
-| `no_citations` / `unresolved_citation` | A claim with no evidence, a citation to a clause that was never retrieved, or a quote that is not verbatim in the clause it names |
-| `low_confidence` | Model's own confidence below threshold |
-| `insufficient_basis` / `conflicting_sources` | The model's read of the evidence |
-| `superseded_standard` | A retrieved clause has been superseded |
-| `always_review_category` | Not a model failure — see below |
-| `schema_validation_failed` / `upstream_error` | The model or a dependency failed |
-
-**`always_review_category`** covers matters where a machine assessment is not the
-appropriate artefact however confident it is: novel structures, capital or profit
-guarantees on profit-sharing contracts, cross-border structuring, sukuk issuance,
-requests phrased as seeking approval.
-
----
-
-## Corpus
-
-Real AAOIFI Shari'ah Standards (English, 2017). The source is **the publisher's
-own PDF**, not the Internet Archive's OCR of it — both are available, and the PDF
-carries a genuine text layer that parses measurably cleaner (48 of 48 standards
-resolve, against 46 of 52 from the OCR, with ~8% more clauses surviving).
-
-**1518 clauses across 48 standards**, every standard that parses cleanly.
-`corpus_version: aaoifi-en-2017@145a0995711cf7ed`
-
-<details>
-<summary>Standards indexed</summary>
-
-| No. | Standard | Chunks |
-|----:|----------|-------:|
-| 1 | Trading in Currencies | 24 |
-| 2 | Debit Card, Charge Card and Credit Card | 24 |
-| 3 | Procrastinating Debtor | 14 |
-| 4 | Settlement of Debts by Set-Off | 9 |
-| 5 | Guarantees | 43 |
-| 6 | Conversion of a Conventional Bank to an Islamic Bank | 32 |
-| 7 | Hawalah | 27 |
-| 8 | Murabahah | 64 |
-| 9 | Ijarah and Ijarah Muntahia Bittamleek | 57 |
-| 10 | Salam and Parallel Salam | 30 |
-| 11 | Istisna'a and Parallel Istisna'a | 54 |
-| 12 | Sharikah (Musharakah), and Modern Corporations | 91 |
-| 13 | Mudarabah | 32 |
-| 14 | Documentary Credit | 37 |
-| 15 | Ju'alah | 24 |
-| 16 | Commercial Papers | 16 |
-| 17 | Investment Sukuk | 58 |
-| 18 | Possession (Qabd) | 18 |
-| 19 | Loan (Qard) | 14 |
-| 20 | Sale of Commodities in Organized Markets | 28 |
-| 21 | Financial Paper (Shares and Bonds) | 37 |
-| 22 | Concession Contracts | 38 |
-| 23 | Agency and the Act of an Uncommissioned Agent (Fodoo | 33 |
-| 24 | Syndicated Financing | 17 |
-| 25 | Combination of Contracts | 25 |
-| 26 | Islamic Insurance | 41 |
-| 27 | Indices | 18 |
-| 28 | Banking Services in Islamic Banks | 10 |
-| 29 | Stipulations and Ethics of Fatwa in the Institutiona | 38 |
-| 30 | Monetization (Tawarruq) | 13 |
-| 31 | Controls on Gharar in Financial Transactions | 29 |
-| 32 | Arbitration | 43 |
-| 33 | Waqf | 42 |
-| 34 | Hiring of Persons | 38 |
-| 35 | Zakah | 115 |
-| 36 | Impact of Contingent Incidents on Commitments | 9 |
-| 37 | Credit Agreement | 32 |
-| 38 | Online Financial Dealings | 26 |
-| 39 | Mortgage and Its Contemporary Applications | 26 |
-| 40 | Distribution of Profit in Mudarabah-Based Investment | 47 |
-| 41 | Islamic Reinsurance | 17 |
-| 45 | Protection of Capital and Investments | 16 |
-| 49 | Unilateral and Bilateral Promise | 17 |
-| 50 | Irrigation Partnership (Musaqat) | 23 |
-| 51 | Options to Revoke Contracts Due to Incomplete Perfor | 22 |
-| 52 | Options to Reconsider (Cooling-Off Options, Either-O | 27 |
-| 53 | 'Arboun (Earnest Money) | 11 |
-| 54 | Revocation of Contracts by Exercise of a Cooling-Off | 12 |
-
-</details>
-
-Ingestion applies a quality gate (`ingest/parse.py`, `is_well_parsed`): a standard
-whose title never resolved, or which yielded almost no numbered entries, did not
-really parse — its headers were damaged in the source — and indexing it would
-inject noise without adding coverage. On the PDF text nothing is excluded; on the
-OCR text six standards are.
-
-### Why the chunk is the clause
-
-AAOIFI text is hierarchically numbered — `2/2/2` sits under `2/2` under `2`. So:
-
-> **The chunk boundary is the citation unit.**
-
-A retrieved chunk *is* a reference a compliance officer can verify by hand
-(`AAOIFI SS No. 8 (Murabahah), clause 3/1/1`). A generic recursive splitter would
-straddle `2/2/2` and `2/2/3` and a citation could then only point at a page.
-
-Each chunk carries its heading path, because disclosure text repeats
-near-identical language across products — profit distribution under Mudarabah and
-under Wakala read alike and mean different things. Clauses longer than 1,800
-characters are split on sentence boundaries with overlap, keeping the parent
-clause path.
-
-### Source defects are permanent, and the system assumes it
-
-Clause SS8-3.1.1 reads `"concludes a urchase contract"` — in the publisher's own
-PDF, under every extraction mode, and it is the only dropped-letter instance in
-1,264 pages. It is a typo in the published standard, not an OCR artefact, and no
-cleaner source fixes it.
-
-That is why citation checking tolerates imperfect source text rather than
-demanding character-perfect equality (`agent/guardrails.py`). Mal will eventually
-index its own term sheets and
-counsel memos, which will be far messier than AAOIFI's typesetting. A system that
-requires a clean corpus is one that breaks on contact with production.
+The model returns a **finding** about evidence; deterministic code maps that onto
+the **verdict**. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for that mapping,
+the escalation codes, and why a chunk is a clause.
 
 ## Quick start
 
 ```bash
-git clone <repo> && cd sharia-compliance-agent
+git clone https://github.com/anasalatasiuni/sharia-compliance-agent
+cd sharia-compliance-agent
 ./scripts/bootstrap.sh          # starts Qdrant, restores the prebuilt index
 $EDITOR .env                    # add OPENROUTER_API_KEY
 docker compose up api
 ```
-
-Then:
 
 ```bash
 curl -s localhost:8000/health | jq          # expect points: 1518
@@ -249,16 +110,17 @@ curl -sS -X POST localhost:8000/assess \
 
 The index ships with the repo as a Qdrant snapshot, so nothing has to be
 re-embedded. An OpenRouter key is needed only for the reasoning and reranking
-calls — about $0.02 per assessment; until one is set, `/health` reports
-`degraded` with `credentials.openrouter: false` rather than failing later at the
-first request. Retrieval itself is free and works immediately:
+calls, about $0.02 per assessment; until one is set, `/health` reports `degraded`
+with `credentials.openrouter: false` rather than failing later at the first
+request. Retrieval itself is free and works immediately:
 
 ```bash
 python scripts/retrieval_debug.py "can we sell before we own it" \
   --expect SS8-3.1.1 --no-rerank
 ```
 
-### Running without Docker
+<details>
+<summary>Running without Docker, or rebuilding the index</summary>
 
 ```bash
 uv venv --python 3.12 && uv pip install -e ".[dev]"
@@ -266,493 +128,109 @@ docker compose up -d qdrant && ./scripts/bootstrap.sh
 uvicorn sharia_agent.api.main:app --reload
 ```
 
-### Rebuilding the index
-
-Only needed if the corpus changes — the shipped snapshot is built from exactly
-these steps. Costs ~$0.04 and needs the source PDF.
-
-#### Fetch the corpus
-
-Not committed — 12 MB of third-party standards. Ingestion reads the PDF directly
-and shells out to `pdftotext`, so you also need poppler.
+Rebuilding is only needed if the corpus changes. It costs ~$0.04 and needs
+poppler plus the source PDF:
 
 ```bash
-# Debian/Ubuntu: sudo apt install poppler-utils
-#         macOS: brew install poppler
-
+# Debian/Ubuntu: sudo apt install poppler-utils      macOS: brew install poppler
 curl -L -o corpus/raw/aaoifi-shariah-standards-en-2017.pdf \
   "https://archive.org/download/AAOIFIShariaaStandardsENG1/AAOIFI_Shariaa-Standards-ENG%201.pdf"
-```
 
-#### Build the index
-
-```bash
 python -m sharia_agent.ingest.cli --dry-run   # parse + chunk, no API calls, free
 python -m sharia_agent.ingest.cli             # embed + index (~1,518 chunks)
 ```
 
-The first run extracts text from the PDF and caches it alongside. It writes
-`corpus/manifest.json` with the `corpus_version`, the detected embedding
-dimension, and an `index_snapshot` folding in corpus content, clause selection
-and embedding model. Every audit record pins those, which is what makes a verdict
-replayable — and what invalidates any cache keyed on the snapshot the moment the
-corpus is re-indexed.
+The first run caches the extracted text and writes `corpus/manifest.json` with the
+`corpus_version` and an `index_snapshot` folding in corpus content, clause
+selection and embedding model. Every audit record pins those, which is what makes
+a verdict replayable.
 
-`--standards 8 9 13` indexes a subset; omit it for everything that parses cleanly.
+</details>
 
----
-
-## Using the API
-
-### Assess (synchronous)
-
-```bash
-curl -sS -X POST http://localhost:8000/assess \
-  -H "Authorization: Bearer demo-token-analyst" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "Can Mal sell a vehicle to a customer under murabaha before we have purchased it from the dealer?"}'
-```
-
-A real response, trimmed only where marked:
+## Example response
 
 ```jsonc
 {
-  "assessment_id": "8dc253f0f0cd43599da0e9aaf7058427",
-  "trace_id": "6b9ec77b8b9a45bb82751b59873650b9",
-  "query": "Can Mal sell a vehicle to a customer under murabaha before we have purchased it from the dealer?",
   "verdict": "NON_COMPLIANT",
   "confidence": 0.95,
-  "reasoning": "The proposal requests that Mal sell a vehicle to a customer via murabaha before Mal has purchased it from the dealer. The retrieved AAOIFI standards explicitly prohibit this arrangement. […] The sequence mandated by the standards is: (1) Institution contracts with supplier, (2) Institution acquires actual or constructive possession, (3) Institution sells to customer. The proposal reverses steps 1 and 3, which the standards forbid.",
+  "reasoning": "The proposal requests that Mal sell a vehicle to a customer via murabaha before Mal has purchased it from the dealer. […] The proposal reverses steps 1 and 3, which the standards forbid.",
   "citations": [
     {
       "chunk_id": "SS8-3.1.1",
-      "quote": "The Institution shall not sell any item in a Murabahah transaction before it acquires such item. Hence, it is not valid for the Institution to conclude a Murabahah sale with the customer before the Institution concludes a purchase contract with the supplier…",
-      "supports": "The core prohibition against selling before acquisition and before concluding a supplier contract"
-    },
-    {
-      "chunk_id": "SS8-3.2.1",
-      "quote": "It is obligatory that the Institution's actual or constructive possession of the item be ascertained before its sale to the customer on the basis of Murabahah.",
-      "supports": "The mandatory sequencing: possession must be established before the customer sale, not after"
-    },
-    {
-      "chunk_id": "SS8-2.3.5",
-      "quote": "If the customer then does not purchase the item, the Institution is able to return it to the supplier within the specified period on the basis of the conditional option that is established in Shari'ah…",
-      "supports": "Even under sale-or-return structures, the Institution must first acquire (conditionally) before offering to the customer"
+      "quote": "The Institution shall not sell any item in a Murabahah transaction before it acquires such item…",
+      "supports": "The core prohibition against selling before acquisition"
     }
   ],
   "concerns": ["ownership_sequence"],
   "escalations": [],
-  "missing_information": [],
-  "clauses_considered": ["SS8-3.1.1", "SS8-3.2.1", "SS1-2.6.5", "SS8-2.2.3", "SS8-2.3.5"],
+  "trace_id": "6b9ec77b8b9a45bb82751b59873650b9",
   "corpus_version": "aaoifi-en-2017@145a0995711cf7ed",
   "model": "anthropic/claude-haiku-4.5",
-  "prompt_version": "v1",
   "latency_ms": 18032,
-  "created_at": "2026-09-15T11:58:07.629464Z",
-  "disclaimer": "Decision-support output. This is not a fatwa and does not constitute Shari'ah approval. Under CBUAE rules, Shari'ah determinations are reserved to the institution's Internal Shari'ah Supervision Committee."
+  "disclaimer": "Decision-support output. This is not a fatwa…"
 }
 ```
 
-That request cost 11,761 input and 1,746 output tokens — $0.021 at Haiku list
-price. The third citation is worth noting: nothing asked the model to address
-sale-or-return, and it went looking for the nearest thing to a counter-argument
-rather than stopping at the two clauses that made its case.
+Full response, the async path and every setting are in
+[docs/API.md](docs/API.md).
 
-### Assess (asynchronous)
+## Evaluated
 
-A hard question with three retrieval rounds can outrun a client timeout. The
-async path is also the shape this service takes at volume.
+Two runs of 40 labelled cases, committed under `eval/results/`:
 
-```bash
-curl -sS -X POST "http://localhost:8000/assess?mode=async" \
-  -H "Authorization: Bearer demo-token-analyst" \
-  -H "Content-Type: application/json" \
-  -d '{"query": "Is a diminishing musharaka home finance structure with a binding purchase undertaking acceptable?"}'
-# → 202 {"job_id": "a1b2…", "status": "queued", "poll": "/assess/a1b2…"}
-
-curl -sS http://localhost:8000/assess/a1b2… \
-  -H "Authorization: Bearer demo-token-analyst"
-```
-
-Jobs are readable only by the principal that created them — otherwise a job id is
-a capability anyone can guess.
-
-### Health
-
-`/health` is **readiness**, not liveness. A process that is up but whose
-collection is empty answers every question with `NEEDS_REVIEW` and looks healthy
-doing it, so the check requires the index to have content.
-
-```bash
-curl -sS http://localhost:8000/health | jq
-curl -sS http://localhost:8000/health/live     # pure liveness
-```
-
-Returns `503` when the index is empty, a credential is missing, or a circuit
-breaker is open.
-
----
-
-## Deployment
-
-The API runs on Render's free tier; Qdrant Cloud's free tier holds the index.
-They are separate because Render's free web service has no persistent disk, so
-the index has to live somewhere it survives a restart.
-
-The service idles at ~148 MB against Render's 512 MB, and the index is ~5 MB of
-vectors against Qdrant's 1 GB — neither is close to a limit.
-
-### 1. Index a Qdrant Cloud cluster
-
-Create a free cluster (no card required), then ingest against it rather than
-against localhost:
-
-```bash
-SCA_QDRANT_URL=https://<cluster>.<region>.cloud.qdrant.io:6333 \
-SCA_QDRANT_API_KEY=<key> \
-python -m sharia_agent.ingest.cli --recreate
-```
-
-### 2. Deploy
-
-The image builds and runs anywhere that takes a Dockerfile. It needs ~150 MB of
-RAM and no persistent disk, since the index lives in the managed cluster.
-
-[`deploy/render.yaml`](deploy/render.yaml) is a working Render blueprint
-(*New → Blueprint*), which applies the region, plan, health-check path and the
-tuning values the eval baseline was measured at. Any other container host works
-the same way — build from the Dockerfile and set the four values below.
-
-Two constraints worth knowing before choosing a host. The service holds a
-long-lived process: circuit breakers accumulate failures across requests and the
-async job store lives in memory, so a serverless target silently degrades both
-rather than failing loudly. And an assessment takes 15-30 seconds, so any
-platform with a request timeout under ~60s will cut off the synchronous path.
-
-### 3. Use a token that is not in this repo
-
-`.env.example` is committed, so `demo-token-analyst` is public and worthless as
-an access control. Generate a real one:
-
-```bash
-python -c "import secrets; print(secrets.token_urlsafe(32))"
-# SCA_PRINCIPALS=<token>:reviewer@mal.ae:assess
-```
-
-### 4. Keep the cluster alive
-
-[`.github/workflows/keepalive.yml`](.github/workflows/keepalive.yml) pings
-`/health` once a day. Set the repository variable `DEPLOY_URL` to enable it.
-
-This is not about the cold start. **Qdrant Cloud suspends a free cluster after a
-week idle and deletes it after four** — and the failure is silent: the URL still
-resolves, `/health` just starts reporting an empty index. A daily request
-prevents that at no cost. One ping covers both services, because `/health`
-queries the collection.
-
-Preventing Render's 15-minute spin-down would be a different matter: staying
-awake is ~720 hours against a 750-hour monthly allowance. Not worth the entire
-budget to avoid one minute of waiting, so **the first request after idle takes
-about a minute.** Subsequent ones are normal.
-
-### Verifying a deployment
-
-```bash
-DEPLOY_URL=https://<your-instance>
-
-curl -s $DEPLOY_URL/health | jq                 # expect points: 1518
-
-curl -sS -X POST $DEPLOY_URL/assess \
-  -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
-  -d '{"query": "Can Mal offer a savings account paying a fixed 4% annual return?"}'
-```
-
-`/health` returning `503` with `manifest_mismatch` means the service is pointed at
-a different index than the one it was built against — re-run the ingest, or fix
-`SCA_QDRANT_URL`.
-
-### What this deployment is not
-
-A demo. `SCA_ENV=prod` only tightens logging; the posture described in
-[`docs/PART2-technical-decisions.md`](docs/PART2-technical-decisions.md) §5 —
-in-country inference under CBUAE residency rules, OIDC instead of static tokens,
-audit records on WORM storage — is not what is running here.
-
-## Configuration
-
-Everything tunable is an environment variable, so a deployment is reproducible
-from its environment alone. Full list in [`.env.example`](.env.example).
-
-| Variable | Default | Notes |
+| | run 1 | run 2 |
 |---|---|---|
-| `OPENROUTER_API_KEY` | — | The only credential required |
-| `SCA_MODEL` | `anthropic/claude-haiku-4.5` | Reasoning model. The only one evaluated here — see PART2 §2.2.1 for why a stronger model is not assumed to be worth its cost |
-| `SCA_EMBED_MODEL` | `baai/bge-m3` | Multilingual, real Arabic coverage |
-| `SCA_EMBED_DIM` | `0` | `0` = detect from the provider at ingest |
-| `SCA_RERANK_BACKEND` | `llm` | `llm` \| `local` \| `none` — see below |
-| `SCA_RETRIEVE_CANDIDATES` | `40` | Hybrid pool before reranking |
-| `SCA_RERANK_TOP_K` | `5` | Clauses sent to the model |
-| `SCA_MAX_RETRIEVAL_ROUNDS` | `3` | Hard cap on the search loop |
-| `SCA_MIN_RERANK_SCORE` | `0.35` | Below this → `weak_retrieval` |
-| `SCA_MIN_MODEL_CONFIDENCE` | `0.70` | Below this → `low_confidence` |
-| `SCA_LOG_FULL_PROMPTS` | `true` | **Must be `false` in production** |
+| accuracy | 0.925 | 0.925 |
+| **false `COMPLIANT`** | **0** | **0** |
+| recall@5 · MRR | 0.838 · 0.840 | 0.811 · 0.870 |
 
-### Reranking backends
-
-OpenRouter exposes no rerank endpoint, so this is a deployment choice.
-
-| Backend | Cost | Data egress | Use |
-|---|---|---|---|
-| `llm` | ~$0.01/query | Clause text leaves | Demo default — no extra setup |
-| `local` | free | **None** | Production. `bge-reranker-v2-m3`, Apache-2.0, ~560 MB on CPU. `pip install -e ".[local-rerank]"` |
-| `none` | free | None | Fusion order only; guardrails escalate for unverified ranking |
-
-`jina-reranker-v2-multilingual` scores better but is CC-BY-NC-4.0 and therefore
-unusable commercially at a bank.
-
----
-
-## Observability
-
-Structured JSON to stdout, one line per stage, every line carrying `trace_id`.
-Span names are OpenTelemetry-shaped (`sharia.retrieve`, `sharia.reason`), so
-swapping stdout for a collector is a wiring change.
-
-The full trace for the assessment above, filtered to its `trace_id`:
-
-```jsonc
-{"msg":"sharia.intake",     "duration_ms":0,     "ok":true, "redactions":0}
-{"msg":"sharia.retrieve",   "duration_ms":1725,  "ok":true, "round":1, "candidates":40, "sparse_terms":11}
-{"msg":"sharia.rerank",     "duration_ms":3438,  "ok":true, "backend":"llm", "returned":5, "top_score":0.95}
-{"msg":"sharia.refine",     "duration_ms":6292,  "ok":true, "round":2, "tool_calls":0, "finish_reason":"stop"}
-{"msg":"sharia.evidence",   "duration_ms":11457, "ok":true, "clauses":5}
-{"msg":"sharia.reason",     "duration_ms":6571,  "ok":true, "clauses":5,
-                            "finding":"SUPPORTED_NON_COMPLIANT", "confidence":0.95, "citations":3}
-{"msg":"sharia.guardrails", "duration_ms":3,     "ok":true, "verdict":"NON_COMPLIANT", "escalations":[]}
-{"msg":"assessment.complete","assessment_id":"8dc253f0…", "verdict":"NON_COMPLIANT", "latency_ms":18032}
-```
-
-Two things are legible here that matter. The model reported a **finding**
-(`SUPPORTED_NON_COMPLIANT`) and the guardrail stage produced the **verdict**
-(`NON_COMPLIANT`) — the two vocabularies stay separate all the way into the logs,
-so it is always visible whether a verdict came from the evidence or from a gate.
-And reranking cost 3.4s against 1.7s of retrieval, which is why it is a
-configurable backend rather than a fixed part of the pipeline.
-
-### The audit record
-
-Emitted as one `audit.record` event per assessment, so it inherits retention,
-access control and shipping from the normal log pipeline. It is what a Shari'ah
-reviewer is actually shown, and it contains everything needed to replay a verdict
-months later:
-
-```
-trace_id · assessment_id · principal_id · query_hash
-corpus_version · index_snapshot · model · model_effort · prompt_version
-retrieval_rounds[]   each query, why it was issued, how many hits
-retrieved[]          chunk_id + fused (RRF) and rerank scores
-draft                the model's finding, confidence, citations
-final_verdict · escalations[]
-stages[]             per-stage latency
-usage                tokens across every call the assessment made
-```
-
-Per-arm scores are deliberately **not** stored. Qdrant's fusion returns a single
-merged score, and recovering the dense and sparse ranks separately would cost two
-extra queries on every request to serve the small fraction ever investigated.
-They are reconstructible on demand instead — `index_snapshot` pins the index, so
-any past retrieval can be replayed:
-
-```bash
-python scripts/retrieval_debug.py "<the query>" --expect SS8-3.1.1
-```
-
-which reports each arm's rank separately and names the failure:
-
-```
-  SS8-3.1.1
-    dense  : rank 25          <- the lexical arm carried this query
-    sparse : rank 4
-    fused  : rank 6
-    ranked : rank 1           <- the reranker promoted it five places
-```
-
-Pinning `corpus_version` and `prompt_version` is the point: without them you
-cannot tell whether a disputed verdict came from a **retrieval miss** (wrong
-clauses reached the model) or a **reasoning miss** (right clauses, wrong
-conclusion). Those have different fixes and the distinction is unrecoverable
-after the fact if it was not recorded.
-
----
-
-## Testing
-
-```bash
-pytest -q          # 63 tests, no network
-ruff check .
-```
-
-The eval runs the documentation quotes are committed under `eval/results/` —
-per-case verdicts, retrieved ids, citations and escalation codes — so the numbers
-in [`docs/PART2-technical-decisions.md`](docs/PART2-technical-decisions.md) §3 can
-be checked against the runs that produced them.
-
-`tests/test_guardrails.py` pins the safety properties — fabricated quotes caught,
-citations to unretrieved clauses caught, always-review categories escalating
-despite a clean draft, and the one-directional invariant stated directly as a
-test. `tests/test_pipeline.py` drives the state machine against fake providers:
-the seed search always runs, the retrieval loop is genuinely bounded, repeated
-identical searches are suppressed, and an upstream failure degrades to escalation
-rather than to an answer. `tests/test_api.py` covers the HTTP boundary — auth,
-error mapping, and the job-ownership check. `tests/test_resilience.py` pins the
-distinction between a fault and a rate limit, which is the bug that contaminated
-the first eval run.
-
----
-
-## Tools
-
-All of these run outside the request path.
-
-### `scripts/bootstrap.sh` — a working index without re-embedding
-
-Starts Qdrant and restores `corpus/aaoifi_standards.snapshot.gz`, the prebuilt
-index committed with the repo. Idempotent: if the collection already holds points
-it leaves them alone.
-
-```bash
-./scripts/bootstrap.sh          # ~10s, no API key, no cost
-```
-
-Re-embedding the corpus instead costs ~$0.04 and needs the source PDF, so this is
-the path for anyone who wants to read the system rather than rebuild it. The
-snapshot carries the payload indexes with it — `standard_no`, `standard_name`,
-`corpus_version`, `lang`, `is_superseded` — which is what makes the metadata
-filters run inside the ANN traversal rather than after it.
-
-### `scripts/clauses.py` — browse the corpus
-
-```bash
-python scripts/clauses.py --standard 8 | head          # clauses of SS 8
-python scripts/clauses.py --exists SS8-3.1.1           # verify a gold id
-```
-
-### `scripts/preflight.py` — verify the provider before spending
-
-Checks embeddings, tool calling, and strict structured output as three
-independent requests, so a failure names exactly one thing. The structured-output
-check sends the **real** `DraftAssessment` schema rather than a toy one — nested
-models and enums are where gateway strict-mode support tends to differ, and a toy
-schema would pass while the real one fails.
-
-```bash
-python scripts/preflight.py                            # ~$0.005
-python scripts/preflight.py --model anthropic/claude-opus-5
-```
-
-Run it before an ingest. A failure here means every assessment would escalate
-while the service looks healthy.
-
-### `scripts/verify_docs.py` — check the docs against reality
-
-Counts, file references, environment variables and eval figures, each checked
-against the manifest, the filesystem, the `Settings` model and the saved results.
-
-```bash
-python scripts/verify_docs.py      # exits non-zero on any mismatch
-```
-
-Documentation drifts silently — a number is right when written and wrong three
-commits later, and nobody re-reads a README looking for arithmetic. An external
-review of this repo found precisely that: the architecture judgements held and
-several of the numbers did not. The parts a machine can check now get checked.
-
-### `scripts/retrieval_debug.py` — why retrieval found, or missed, a clause
-
-Runs each search arm separately against the live index and separates three
-failures that are indistinguishable from the outside.
-
-```bash
-python scripts/retrieval_debug.py "can we sell before we own it" \
-  --expect SS8-3.1.1 --no-rerank      # --no-rerank makes the run free
-```
-
-| reported | meaning | fix lives in |
-|---|---|---|
-| no arm surfaced it | candidate generation | chunking, embedding model, or the corpus |
-| retrieved but cut | ranking | the reranker, or `SCA_RERANK_TOP_K` |
-| id not in the index | the test set is wrong, not retrieval | the label |
-
-The last row matters most when building an eval: a mistyped gold clause id fails
-exactly like a retrieval miss, and chasing the wrong one costs an afternoon.
+Zero false `COMPLIANT` held across both runs, and across a third in which a rate
+limit had broken every upstream call: a failing dependency degrades to escalation
+by construction. `scripts/verify_docs.py` re-reads the saved runs and fails if any
+figure quoted in the docs drifts from them.
 
 ## Known limitations
 
-**No live URL.** Free container hosting without a payment method has effectively
-ended: Render, Koyeb and Fly all require a card, Hugging Face Spaces made the
-Docker runtime paid in July 2026, and Back4App's free URLs expire after 60
-minutes. The deployment path in [Deployment](#deployment) is the one that was
-exercised against Qdrant Cloud, and `./scripts/bootstrap.sh && docker compose up`
-brings the whole system up locally with the index already populated.
+**No live URL.** Free container hosting without a payment method has closed:
+Render, Koyeb and Fly require a card, Hugging Face Spaces made the Docker runtime
+paid in July 2026, and Back4App's free URLs expire an hour after issue. The
+deployment path is built and was exercised against a Qdrant Cloud cluster, and
+`./scripts/bootstrap.sh && docker compose up` brings the whole system up locally
+with the index already populated.
 
-**Corpus is one edition, English only.** All 48 standards that parse cleanly are
-indexed, but that is still a single 2017 edition with no CBUAE circulars, no HSA
-resolutions and no Mal-internal product policy — any of which would bind in
-practice, and which together are the larger half of what actually governs a UAE
-product decision.
+**No supersession data.** `superseded_by`, the guardrail reading it and the
+retrieval filter excluding it are all built, and nothing populates them, because
+the 2017 edition was ingested as a flat snapshot. Until then a repealed clause
+would be cited as though live.
 
-**No supersession data.** The schema and the guardrail exist, but nothing
-populates `superseded_by`, because the 2017 edition was ingested as a flat
-snapshot. A superseded clause would currently be cited as though live. This is
-the most dangerous gap in the system.
+**Six standards are missing from the shipped index: 42, 43, 44, 46, 47, 48.**
+The 2017 edition has 54 and the index holds 48. They are in the source; the header
+regex required `Standard No.` with a period and the publisher's running headers
+omit it, so those standards never resolved a title and the quality gate dropped
+them. `parse.py` is fixed and `tests/test_ingest.py` fails on the old behaviour,
+but **the index has not been rebuilt**, so the gap is live. It matters beyond the
+count: SS 46 governs wakala investment accounts, the compliant alternative to the
+fixed-return savings account in the example above, and a wakala question retrieves
+plausible neighbours from SS 40 and SS 23 instead, so no guardrail fires.
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) has the full diagnosis.
 
-**Reranking defaults to an LLM.** Costs ~$0.01/query and sends clause text to a
-third party. Fine for a demo, wrong for production; `local` fixes both.
+**One corpus edition, English.** CBUAE circulars, HSA resolutions and Mal's own
+product policy are the other half of what governs a real product decision, and
+none is public. Arabic retrieval works by construction and has not been measured.
 
-**Job store is in-process.** Async jobs die with the process and do not survive a
-second replica.
+**Demo scaffolding with the seams cut.** Reranking defaults to an LLM (`local`
+removes both the cost and the data egress), the job store is in-process (`jobs.py`
+is narrow enough that Redis is a one-file change), and auth is static tokens (the
+`scopes` shape downstream is already what an IdP would populate). Redaction on the
+egress path is a compensating control rather than a sufficient one, which
+[docs/PART2-technical-decisions.md](docs/PART2-technical-decisions.md) §5 covers
+against CBUAE residency rules.
 
-**Auth is static tokens.** Demo scaffolding. Real deployment resolves against the
-bank's OIDC provider; the `scopes` shape downstream is already the right one.
+## Documentation
 
-**Redaction is compensating, not sufficient.** CBUAE requires consumer and
-transaction data to be stored and processed inside the UAE. This deployment sends
-redacted text to a US-hosted gateway. That is defensible for a demo and not for
-production — see [`docs/PART2-technical-decisions.md`](docs/PART2-technical-decisions.md) §5.
-
-**English-only retrieval, tested.** The embedding model and the sparse tokenizer
-both handle Arabic (the tokenizer folds alef and ta-marbuta variants), but the
-indexed corpus is the English edition and no Arabic query has been evaluated.
-
-**Evaluated on one model, 40 cases, two runs.** Both scored 0.925 accuracy with
-zero false `COMPLIANT`, and both were measured before the guardrail fixes that
-followed them — see `docs/PART2-technical-decisions.md` §3.0, which records what
-changed and what was not re-measured. At n=40 against a non-deterministic model
-the aggregate is noisy; the two runs agreed on the score and disagreed on which
-cases failed.
-
----
-
-## Layout
-
-```
-src/sharia_agent/
-  config.py          settings; the only source of tunables
-  models.py          domain types — the two vocabularies live here
-  llm.py             OpenRouter client; strict-schema structured output
-  pii.py             redaction, applied on the request path
-  resilience.py      per-service timeouts, backoff, circuit breakers
-  jobs.py            async job store
-  ingest/            parse → chunk → embed → index, + manifest
-  retrieval/         sparse BM25 · Qdrant store · embeddings · rerank · hybrid
-  agent/             prompts · tools · guardrails · pipeline
-  api/               routes · auth · app wiring
-  obs/               trace ids, spans, JSON logging
-```
-
-## Further reading
-
-[`docs/PART2-technical-decisions.md`](docs/PART2-technical-decisions.md) — the
-architecture decisions and what was ruled out, scaling to 50k queries/day, the
-evaluation framework, production observability, security and regulatory risk
-under CBUAE and PDPL, and an honest account of what was cut.
+| | |
+|---|---|
+| [docs/PART2-technical-decisions.md](docs/PART2-technical-decisions.md) | Architecture decisions and what was ruled out, scaling to 50k queries/day, the evaluation framework, production observability, CBUAE and PDPL risk, and what was deprioritised. Also as a [4-page PDF](docs/PART2-technical-decisions.pdf). |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | The two vocabularies, escalation codes, the corpus, and why a chunk is a clause |
+| [docs/API.md](docs/API.md) | Endpoint reference and every configuration variable |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Observability, the audit record, tests, diagnostic scripts, deployment |
