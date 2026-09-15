@@ -18,6 +18,7 @@ import asyncio
 import time
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from ..llm import breaker_state as llm_breaker_state
@@ -171,6 +172,18 @@ def _emit_audit(result) -> None:
 # ---------------------------------------------------------------------------
 # Health
 # ---------------------------------------------------------------------------
+
+
+@router.get("/", include_in_schema=False)
+async def root() -> RedirectResponse:
+    """Send a visitor to the interactive docs.
+
+    The bare URL is the first thing anyone opening this service tries, and a
+    404 there is a poor answer to "what is this". /docs explains the API and,
+    now that a security scheme is declared, lets them authorise and run a real
+    assessment from the browser.
+    """
+    return RedirectResponse(url="/docs")
 
 
 @router.get("/health", summary="Readiness: can this instance actually serve traffic?")

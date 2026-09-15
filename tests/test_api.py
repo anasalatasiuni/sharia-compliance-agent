@@ -121,3 +121,21 @@ def test_an_unhandled_failure_still_returns_json_with_a_trace_id(client):
 
 def test_liveness_is_independent_of_dependencies(client):
     assert client.get("/health/live").json() == {"status": "alive"}
+
+
+def test_root_sends_a_visitor_to_the_docs(client):
+    """The bare URL is the first thing anyone opening the service tries, and a
+    404 is a poor answer to 'what is this'."""
+    r = client.get("/", follow_redirects=False)
+    assert r.status_code in (307, 308)
+    assert r.headers["location"] == "/docs"
+
+
+def test_openapi_advertises_bearer_auth(client):
+    """Swagger only renders an Authorize button when a scheme is declared.
+    Without it a reviewer can read the API but not exercise it from a browser.
+    """
+    spec = client.get("/openapi.json").json()
+    schemes = spec["components"]["securitySchemes"]
+    assert any(s.get("scheme") == "bearer" for s in schemes.values()), schemes
+    assert spec["paths"]["/assess"]["post"].get("security")

@@ -1,7 +1,9 @@
 # Shari'ah Compliance Agent
 
 **Live:** [https://shariacomplianceagent-agay4f9w.b4a.run](https://shariacomplianceagent-agay4f9w.b4a.run) · [`/health`](https://shariacomplianceagent-agay4f9w.b4a.run/health) · [`/docs`](https://shariacomplianceagent-agay4f9w.b4a.run/docs)
-(`POST /assess` needs a bearer token — supplied with the submission.)
+Open the URL and it lands on interactive docs — **Authorize** with the token
+supplied alongside this submission, then run a real assessment from the browser.
+`GET /health` needs no token.
 
 Decision support for Mal's internal compliance team. Give it a proposed product
 or transaction in plain English; it returns an evidence-backed preliminary

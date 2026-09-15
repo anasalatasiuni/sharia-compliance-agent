@@ -13,7 +13,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from fastapi import Depends, Header, HTTPException, status
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from ..config import Settings, get_settings
 
@@ -31,18 +32,29 @@ class Principal:
             )
 
 
+# Declared as a scheme rather than read off a raw header, so it appears in the
+# OpenAPI document and /docs offers an Authorize button. Without that a reviewer
+# can read the API but cannot exercise it from the browser.
+# auto_error=False keeps the 401-with-WWW-Authenticate below rather than
+# FastAPI's default 403, which would be the wrong status for a missing token.
+bearer_scheme = HTTPBearer(
+    auto_error=False,
+    scheme_name="Bearer token",
+    description="Supplied with the submission. Paste the token alone, without the word Bearer.",
+)
+
+
 async def current_principal(
-    authorization: str | None = Header(default=None),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
     settings: Settings = Depends(get_settings),
 ) -> Principal:
-    if not authorization or not authorization.lower().startswith("bearer "):
+    if credentials is None or credentials.scheme.lower() != "bearer":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="missing bearer token",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    token = authorization.split(" ", 1)[1].strip()
-    record = settings.parsed_principals().get(token)
+    record = settings.parsed_principals().get(credentials.credentials.strip())
     if record is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
