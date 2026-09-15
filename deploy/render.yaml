@@ -33,3 +33,22 @@ services:
         value: anthropic/claude-haiku-4.5
       - key: SCA_MODEL_EFFORT
         value: none         # Haiku 4.5 predates reasoning-effort
+
+      # Pinned rather than left to code defaults. These are the exact values the
+      # eval baseline in PART2 §3.0 was measured at, so the deployed instance
+      # provably matches the documented numbers instead of drifting with them.
+      - key: SCA_RERANK_TOP_K
+        value: "5"
+      - key: SCA_MIN_MODEL_CONFIDENCE
+        value: "0.70"
+      - key: SCA_MIN_RERANK_SCORE
+        value: "0.35"
+      - key: SCA_MAX_RETRIEVAL_ROUNDS
+        value: "3"
+
+      # Lower than the code default of 8. Measured during eval runs: five
+      # concurrent assessments were enough to trip the provider's rate limit,
+      # and a 0.1-CPU free instance has no headroom to absorb the retries.
+      # Excess load is shed with 429 + Retry-After rather than queued.
+      - key: SCA_MAX_CONCURRENT_ASSESSMENTS
+        value: "3"

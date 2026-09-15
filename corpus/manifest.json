@@ -1,7 +1,7 @@
 {
   "corpus_version": "aaoifi-en-2017@145a0995711cf7ed",
   "index_snapshot": "bff37e1f657b9ae3",
-  "built_at": "2026-09-14T09:46:03.830514+00:00",
+  "built_at": "2026-09-15T09:16:01.153469+00:00",
   "collection": "aaoifi_standards",
   "embed_model": "baai/bge-m3",
   "embed_dim": 1024,
