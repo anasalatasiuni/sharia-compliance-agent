@@ -535,8 +535,10 @@ production — see [`docs/PART2-technical-decisions.md`](docs/PART2-technical-de
 both handle Arabic (the tokenizer folds alef and ta-marbuta variants), but the
 indexed corpus is the English edition and no Arabic query has been evaluated.
 
-**No measured eval numbers yet.** The framework is specified in §3 of the
-technical document; it has not been run.
+**Evaluated on one model, 40 cases.** Baseline is 0.925 accuracy with zero false
+`COMPLIANT` (`docs/PART2-technical-decisions.md` §3.0). Not yet run against a
+second model, so the cost/quality tradeoff in §2.2.1 remains open, and at n=40 the
+calibration finding is suggestive rather than settled.
 
 ---
 

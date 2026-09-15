@@ -397,10 +397,59 @@ Production needs:
 
 ## 3. AI evaluation and quality
 
-Everything in this section is specified and **not yet run** (§6). The tuning
-constants currently in the code — `top_k=5`, `min_rerank_score=0.35`,
-`min_model_confidence=0.70` — are reasoned guesses, and the purpose of this
-framework is to replace them with measurements.
+**This has now been run.** Baseline below; the framework that produced it follows.
+The tuning constants — `top_k=5`, `min_rerank_score=0.35`,
+`min_model_confidence=0.70` — were reasoned guesses, and some of them the
+measurement has already contradicted.
+
+### 3.0 Baseline
+
+40 labelled cases, `claude-haiku-4.5`, index `bff37e1f657b9ae3`, prompt `v1`.
+$1.08, 469s wall clock.
+
+| | |
+|---|---|
+| accuracy | **0.925** (37/40) |
+| **false `COMPLIANT`** | **0** |
+| missed escalation | 0 |
+| over-escalation | 3 |
+| recall@5 · MRR | 0.838 · 0.840 |
+| context precision | 0.266 |
+
+```
+                 COMPLIANT  NON_COMPLIANT  NEEDS_REVIEW
+COMPLIANT               13              0             1
+NON_COMPLIANT            0             12             2
+NEEDS_REVIEW             0              0            12
+```
+
+Nothing below the diagonal. Every error over-escalated; none got through. That is
+the one-directional property of §1.0 showing up as measurement rather than
+assertion, and it held under adversarial conditions too — an earlier run in which
+a rate limit had broken every upstream call still produced zero false
+`COMPLIANT`, because a failing dependency degrades to escalation by construction.
+
+Three findings the numbers contradict the design on:
+
+**Context precision is 0.266.** Roughly three-quarters of what reaches the model
+is irrelevant — at `top_k=5`, about 3.7 clauses of noise per request. Retrieved
+context is also the uncacheable majority of the token bill (§2.3). `top_k=3` is
+the obvious experiment and it is both cheaper and plausibly *more* accurate,
+since noise degrades answers even when the right clause is present.
+
+**Confidence is not calibrated.** The 0.90–0.95 band scored 1.00 and the
+0.95–1.00 band scored 0.83 — the most confident answers were the least accurate.
+At n=40 that is suggestive rather than conclusive, but it means
+`min_model_confidence` is not currently doing the work it was put there to do,
+and a threshold on an uncalibrated signal is closer to noise than to a control.
+
+**Every failure was the same gate.** All three were `unresolved_citation` with the
+governing clause successfully retrieved: retrieval worked, the reasoning was
+sound, and citation checking rejected the evidence. One is fully diagnosed — the
+model wrote `SS3.7` for `SS12-3.7`, and four of that case's five citations were
+valid. Relaxing the gate would take accuracy to ~1.00, which is precisely why it
+has not been relaxed: a score bought by weakening a safety control is not the
+same score.
 
 ### 3.1 Measure retrieval separately from reasoning
 
@@ -690,12 +739,13 @@ policy so Qdrant is not reachable outside the application.
 
 Ordered by what it would actually cost in production.
 
-**1. No measured eval numbers.** The framework in §3 is specified and has not been
-run. *Cost:* every tuning constant in the system — `top_k=5`,
-`min_rerank_score=0.35`, `min_model_confidence=0.70` — is currently an informed
-guess with no evidence behind it. There is no baseline, so there is no way to know
-whether a change helps, and no licence for the cost reductions in §2.2 that trade
-quality. This is the largest gap and the first thing I would close.
+**1. One model, one baseline, 40 cases.** §3 now carries a measured baseline, but
+only for `claude-haiku-4.5`. *Cost:* the §2.2.1 model comparison is still
+unsettled — the question of whether a cheaper model escalates more, which is what
+actually decides the bill, has a harness ready and no second data point. At 40
+cases the confidence intervals are also wide enough that the calibration finding
+is a hypothesis rather than a result. Both are cheap to close: a second model run
+is ~$2.70.
 
 **2. No supersession data.** `superseded_by`, the guardrail that reads it, and the
 retrieval filter that excludes it all exist. Nothing populates them, because the
