@@ -313,31 +313,50 @@ curl -sS -X POST http://localhost:8000/assess \
   -d '{"query": "Can Mal sell a vehicle to a customer under murabaha before we have purchased it from the dealer?"}'
 ```
 
+A real response, trimmed only where marked:
+
 ```jsonc
 {
-  "assessment_id": "3f2a…",
-  "trace_id": "9c81…",
+  "assessment_id": "8dc253f0f0cd43599da0e9aaf7058427",
+  "trace_id": "6b9ec77b8b9a45bb82751b59873650b9",
+  "query": "Can Mal sell a vehicle to a customer under murabaha before we have purchased it from the dealer?",
   "verdict": "NON_COMPLIANT",
-  "confidence": 0.93,
-  "reasoning": "The arrangement requires the Institution to contract a sale …",
+  "confidence": 0.95,
+  "reasoning": "The proposal requests that Mal sell a vehicle to a customer via murabaha before Mal has purchased it from the dealer. The retrieved AAOIFI standards explicitly prohibit this arrangement. […] The sequence mandated by the standards is: (1) Institution contracts with supplier, (2) Institution acquires actual or constructive possession, (3) Institution sells to customer. The proposal reverses steps 1 and 3, which the standards forbid.",
   "citations": [
     {
       "chunk_id": "SS8-3.1.1",
-      "quote": "shall not sell any item in a Murabahah transaction before it acquires such item",
-      "supports": "ownership must precede the sale contract"
+      "quote": "The Institution shall not sell any item in a Murabahah transaction before it acquires such item. Hence, it is not valid for the Institution to conclude a Murabahah sale with the customer before the Institution concludes a purchase contract with the supplier…",
+      "supports": "The core prohibition against selling before acquisition and before concluding a supplier contract"
+    },
+    {
+      "chunk_id": "SS8-3.2.1",
+      "quote": "It is obligatory that the Institution's actual or constructive possession of the item be ascertained before its sale to the customer on the basis of Murabahah.",
+      "supports": "The mandatory sequencing: possession must be established before the customer sale, not after"
+    },
+    {
+      "chunk_id": "SS8-2.3.5",
+      "quote": "If the customer then does not purchase the item, the Institution is able to return it to the supplier within the specified period on the basis of the conditional option that is established in Shari'ah…",
+      "supports": "Even under sale-or-return structures, the Institution must first acquire (conditionally) before offering to the customer"
     }
   ],
   "concerns": ["ownership_sequence"],
   "escalations": [],
   "missing_information": [],
-  "clauses_considered": ["SS8-3.1.1", "SS8-3.2.1", "…"],
+  "clauses_considered": ["SS8-3.1.1", "SS8-3.2.1", "SS1-2.6.5", "SS8-2.2.3", "SS8-2.3.5"],
   "corpus_version": "aaoifi-en-2017@145a0995711cf7ed",
   "model": "anthropic/claude-haiku-4.5",
   "prompt_version": "v1",
-  "latency_ms": 7412,
-  "disclaimer": "Decision-support output. This is not a fatwa …"
+  "latency_ms": 18032,
+  "created_at": "2026-09-15T11:58:07.629464Z",
+  "disclaimer": "Decision-support output. This is not a fatwa and does not constitute Shari'ah approval. Under CBUAE rules, Shari'ah determinations are reserved to the institution's Internal Shari'ah Supervision Committee."
 }
 ```
+
+That request cost 11,761 input and 1,746 output tokens — $0.021 at Haiku list
+price. The third citation is worth noting: nothing asked the model to address
+sale-or-return, and it went looking for the nearest thing to a counter-argument
+rather than stopping at the two clauses that made its case.
 
 ### Assess (asynchronous)
 
@@ -499,14 +518,26 @@ Structured JSON to stdout, one line per stage, every line carrying `trace_id`.
 Span names are OpenTelemetry-shaped (`sharia.retrieve`, `sharia.reason`), so
 swapping stdout for a collector is a wiring change.
 
+The full trace for the assessment above, filtered to its `trace_id`:
+
 ```jsonc
-{"ts":"…","level":"INFO","msg":"sharia.retrieve","trace_id":"9c81…",
- "principal":"analyst@mal.ae","duration_ms":412,"candidates":40,"sparse_terms":14}
-{"ts":"…","level":"INFO","msg":"sharia.rerank","trace_id":"9c81…",
- "backend":"llm","returned":5,"top_score":0.91}
-{"ts":"…","level":"INFO","msg":"sharia.reason","trace_id":"9c81…",
- "clauses":5,"finding":"SUPPORTED_NON_COMPLIANT","confidence":0.93}
+{"msg":"sharia.intake",     "duration_ms":0,     "ok":true, "redactions":0}
+{"msg":"sharia.retrieve",   "duration_ms":1725,  "ok":true, "round":1, "candidates":40, "sparse_terms":11}
+{"msg":"sharia.rerank",     "duration_ms":3438,  "ok":true, "backend":"llm", "returned":5, "top_score":0.95}
+{"msg":"sharia.refine",     "duration_ms":6292,  "ok":true, "round":2, "tool_calls":0, "finish_reason":"stop"}
+{"msg":"sharia.evidence",   "duration_ms":11457, "ok":true, "clauses":5}
+{"msg":"sharia.reason",     "duration_ms":6571,  "ok":true, "clauses":5,
+                            "finding":"SUPPORTED_NON_COMPLIANT", "confidence":0.95, "citations":3}
+{"msg":"sharia.guardrails", "duration_ms":3,     "ok":true, "verdict":"NON_COMPLIANT", "escalations":[]}
+{"msg":"assessment.complete","assessment_id":"8dc253f0…", "verdict":"NON_COMPLIANT", "latency_ms":18032}
 ```
+
+Two things are legible here that matter. The model reported a **finding**
+(`SUPPORTED_NON_COMPLIANT`) and the guardrail stage produced the **verdict**
+(`NON_COMPLIANT`) — the two vocabularies stay separate all the way into the logs,
+so it is always visible whether a verdict came from the evidence or from a gate.
+And reranking cost 3.4s against 1.7s of retrieval, which is why it is a
+configurable backend rather than a fixed part of the pipeline.
 
 ### The audit record
 
