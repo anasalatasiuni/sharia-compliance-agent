@@ -466,6 +466,45 @@ rather than to an answer.
 
 ---
 
+## Tools
+
+Two scripts, both outside the request path.
+
+### `scripts/preflight.py` — verify the provider before spending
+
+Checks embeddings, tool calling, and strict structured output as three
+independent requests, so a failure names exactly one thing. The structured-output
+check sends the **real** `DraftAssessment` schema rather than a toy one — nested
+models and enums are where gateway strict-mode support tends to differ, and a toy
+schema would pass while the real one fails.
+
+```bash
+python scripts/preflight.py                            # ~$0.005
+python scripts/preflight.py --model anthropic/claude-opus-5
+```
+
+Run it before an ingest. A failure here means every assessment would escalate
+while the service looks healthy.
+
+### `scripts/retrieval_debug.py` — why retrieval found, or missed, a clause
+
+Runs each search arm separately against the live index and separates three
+failures that are indistinguishable from the outside.
+
+```bash
+python scripts/retrieval_debug.py "can we sell before we own it" \
+  --expect SS8-3.1.1 --no-rerank      # --no-rerank makes the run free
+```
+
+| reported | meaning | fix lives in |
+|---|---|---|
+| no arm surfaced it | candidate generation | chunking, embedding model, or the corpus |
+| retrieved but cut | ranking | the reranker, or `SCA_RERANK_TOP_K` |
+| id not in the index | the test set is wrong, not retrieval | the label |
+
+The last row matters most when building an eval: a mistyped gold clause id fails
+exactly like a retrieval miss, and chasing the wrong one costs an afternoon.
+
 ## Known limitations
 
 **Corpus is a slice.** Eight of 61 AAOIFI standards, English only, one edition.
