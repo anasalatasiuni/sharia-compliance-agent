@@ -68,7 +68,7 @@ This buys three things a ReAct loop cannot:
   ╚════════════════════╤════════════════════╝          │
                        ▼ yes                           │
   ┌─────────────────────────────────────────┐          │
-  │ 5  REASON     claude-opus-5             │          │
+  │ 5  REASON     claude-haiku-4.5          │          │
   │    structured output · schema-enforced  │          │
   │    returns a *finding*, not a verdict   │          │
   └────────────────────┬────────────────────┘          │
@@ -315,7 +315,7 @@ curl -sS -X POST http://localhost:8000/assess \
   "missing_information": [],
   "clauses_considered": ["SS8-3.1.1", "SS8-3.2.1", "…"],
   "corpus_version": "aaoifi-en-2017@145a0995711cf7ed",
-  "model": "anthropic/claude-opus-5",
+  "model": "anthropic/claude-haiku-4.5",
   "prompt_version": "v1",
   "latency_ms": 7412,
   "disclaimer": "Decision-support output. This is not a fatwa …"
@@ -452,7 +452,7 @@ from its environment alone. Full list in [`.env.example`](.env.example).
 | Variable | Default | Notes |
 |---|---|---|
 | `OPENROUTER_API_KEY` | — | The only credential required |
-| `SCA_MODEL` | `anthropic/claude-opus-5` | Reasoning model |
+| `SCA_MODEL` | `anthropic/claude-haiku-4.5` | Reasoning model. The only one evaluated here — see PART2 §2.2.1 for why a stronger model is not assumed to be worth its cost |
 | `SCA_EMBED_MODEL` | `baai/bge-m3` | Multilingual, real Arabic coverage |
 | `SCA_EMBED_DIM` | `0` | `0` = detect from the provider at ingest |
 | `SCA_RERANK_BACKEND` | `llm` | `llm` \| `local` \| `none` — see below |
@@ -542,7 +542,7 @@ after the fact if it was not recorded.
 ## Testing
 
 ```bash
-pytest -q          # 51 tests, no network
+pytest -q          # 55 tests, no network
 ruff check .
 ```
 
@@ -575,6 +575,20 @@ python scripts/preflight.py --model anthropic/claude-opus-5
 
 Run it before an ingest. A failure here means every assessment would escalate
 while the service looks healthy.
+
+### `scripts/verify_docs.py` — check the docs against reality
+
+Counts, file references, environment variables and eval figures, each checked
+against the manifest, the filesystem, the `Settings` model and the saved results.
+
+```bash
+python scripts/verify_docs.py      # exits non-zero on any mismatch
+```
+
+Documentation drifts silently — a number is right when written and wrong three
+commits later, and nobody re-reads a README looking for arithmetic. An external
+review of this repo found precisely that: the architecture judgements held and
+several of the numbers did not. The parts a machine can check now get checked.
 
 ### `scripts/retrieval_debug.py` — why retrieval found, or missed, a clause
 

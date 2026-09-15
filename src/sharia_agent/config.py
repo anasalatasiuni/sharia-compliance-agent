@@ -30,8 +30,13 @@ class Settings(BaseSettings):
     openrouter_api_key: str = Field(default="", alias="OPENROUTER_API_KEY")
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
 
-    model: str = "anthropic/claude-opus-5"
-    model_effort: str = "high"
+    # Haiku 4.5 rather than a frontier model, because it is the only one this
+    # system has actually been evaluated on (§3.0) and the only one deployed.
+    # Whether a stronger model earns its cost here is open and argued in §2.2.1;
+    # documenting an untested default would be answering that question by
+    # assertion.
+    model: str = "anthropic/claude-haiku-4.5"
+    model_effort: str = "none"
     embed_model: str = "baai/bge-m3"
 
     # 0 means "ask the provider at ingest time and record it in the manifest".
