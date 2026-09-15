@@ -25,6 +25,11 @@ dev = [
     "pytest-asyncio>=0.24",
     "ruff>=0.7",
 ]
+# Only needed to regenerate the architecture PDF from its markdown source.
+docs = [
+    "weasyprint>=66",
+    "markdown-it-py>=3",
+]
 
 [project.scripts]
 sharia-ingest = "sharia_agent.ingest.cli:main"
