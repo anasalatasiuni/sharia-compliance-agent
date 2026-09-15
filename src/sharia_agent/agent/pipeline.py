@@ -348,6 +348,8 @@ class CompliancePipeline:
         a formatting accident to be retried.
         """
         user = prompts.build_user_message(query, [r.clause for r in retrieved])
+        if self.settings.log_full_prompts:
+            audit.prompt_sent = {"system": prompts.SYSTEM, "user": user}
 
         with span("reason", clauses=len(retrieved)) as s:
             draft, _ = await self.llm.complete_structured(

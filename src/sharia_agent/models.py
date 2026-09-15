@@ -219,6 +219,11 @@ class AuditRecord(BaseModel):
     principal_id: str
     query_hash: str
     query: str | None = None  # omitted when SCA_LOG_FULL_PROMPTS is false
+    # The exact system + user messages sent to the reasoning model. prompt_version
+    # and retrieved[] make the prompt reconstructible, but reconstruction assumes
+    # the template on disk still matches the one that ran; recording it removes
+    # that assumption. Omitted when SCA_LOG_FULL_PROMPTS is false.
+    prompt_sent: dict[str, str] | None = None
 
     corpus_version: str
     index_snapshot: str

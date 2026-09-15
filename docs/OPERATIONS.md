@@ -39,6 +39,7 @@ later:
 ```
 trace_id · assessment_id · principal_id · query_hash
 corpus_version · index_snapshot · model · model_effort · prompt_version
+prompt_sent          the exact system + user messages sent to the model
 retrieval_rounds[]   each query, why it was issued, how many hits
 retrieved[]          chunk_id + fused (RRF) and rerank scores
 draft                the model's finding, confidence, citations
@@ -66,7 +67,7 @@ after the fact if it was not recorded.
 ## Testing
 
 ```bash
-pytest -q          # 70 tests, no network
+pytest -q          # 72 tests, no network
 ruff check .
 ```
 

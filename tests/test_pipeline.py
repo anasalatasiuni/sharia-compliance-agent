@@ -247,3 +247,34 @@ async def test_dev_mode_keeps_the_query_for_debugging():
         query="Is this an acceptable murabaha structure?", principal_id="p"
     )
     assert result.audit.query is not None
+
+
+async def test_audit_record_carries_the_prompt_actually_sent():
+    """The brief requires logging the prompt sent, not just enough to rebuild it.
+
+    prompt_version plus retrieved[] reconstructs the prompt only if the template
+    on disk still matches the one that ran, which is exactly the assumption that
+    breaks when a prompt change is the thing being investigated.
+    """
+    retriever, llm = FakeRetriever(), FakeLLM(draft=good_draft())
+    result = await build(retriever, llm).assess(
+        query="Can Mal sell a car to a customer before buying it from the dealer?",
+        principal_id="analyst@mal.ae",
+    )
+    sent = result.audit.prompt_sent
+    assert sent is not None
+    assert sent["system"].strip(), "system prompt not recorded"
+    # The clauses that reached the model must be visible in the user message.
+    assert "SS8-3.1.1" in sent["user"]
+    assert "sell a car" in sent["user"]
+
+
+async def test_prompt_is_withheld_when_full_prompt_logging_is_off():
+    retriever, llm = FakeRetriever(), FakeLLM(draft=good_draft())
+    result = await build(retriever, llm, log_full_prompts=False).assess(
+        query="Can Mal sell a car to a customer before buying it from the dealer?",
+        principal_id="analyst@mal.ae",
+    )
+    assert result.audit.prompt_sent is None
+    assert result.audit.query is None
+    assert result.audit.query_hash, "correlation must survive redaction"
