@@ -544,7 +544,7 @@ after the fact if it was not recorded.
 ## Testing
 
 ```bash
-pytest -q          # 55 tests, no network
+pytest -q          # 57 tests, no network
 ruff check .
 ```
 
