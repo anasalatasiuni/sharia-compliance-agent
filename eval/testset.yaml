@@ -1,0 +1,339 @@
+# Labelled evaluation set for the Mal Shari'ah compliance RAG system.
+#
+# 40 cases drawn from the indexed AAOIFI Shari'ah Standards corpus.
+#   verdicts    : 14 COMPLIANT / 14 NON_COMPLIANT / 12 NEEDS_REVIEW
+#   difficulty  : 13 easy / 14 medium / 13 hard
+#   coverage    : 21 distinct standards
+#
+# Near-miss pairs (same scenario, one detail flipped, opposite verdict):
+#   q001 / q002  murabaha before vs. after constructive possession
+#   q003 / q004  mark-up tied to future LIBOR vs. LIBOR as an indicator at promise stage
+#   q005 / q006  late-payment charge to bank income vs. undertaking to donate to charity
+#   q009 / q010  diminishing musharakah buy-out at face value vs. at market value
+#   q013 / q014  lessee bearing major maintenance vs. benchmarked floating rent
+#   q019 / q020  selling before ownership under murabaha vs. under istisna'a
+#   q024 / q025  screening ratios disclosed vs. prohibited income undisclosed
+#   q026 / q027  unrelated third-party guarantor vs. same-group guarantor
+#
+# Every gold_clauses id was verified with:
+#   .venv/bin/python scripts/clauses.py --exists <ids>
+
+- id: q001
+  query: "Can Mal sell a vehicle to a customer under murabaha before buying it from the dealer?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS8-3.1.1, SS8-3.2.1]
+  difficulty: easy
+  category: ownership_sequence
+  rationale: "SS8-3.1.1 states the Institution shall not sell any item in a murabaha before it acquires it and takes actual or constructive possession."
+
+- id: q002
+  query: "Trade finance file: the supplier has released the bill of lading to us for a shipment of steel coil, but the cargo is still at sea and won't land for three weeks. Can we execute the murabaha with the customer now?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS8-3.2.4, SS8-3.2.1]
+  difficulty: medium
+  category: ownership_sequence
+  rationale: "SS8-3.2.4 treats receipt of a bill of lading as constructive possession, which satisfies the possession requirement in SS8-3.2.1 even though the goods have not physically arrived."
+
+- id: q003
+  query: "The murabaha term sheet prices the mark-up at 3-month LIBOR plus 250bps, reset every quarter across the five-year tenor. Anything wrong with that?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS8-4.6]
+  difficulty: hard
+  category: profit_determination
+  rationale: "SS8-4.6 requires the price and profit to be fixed and known at signature and expressly forbids tying the profit to a future LIBOR rate."
+
+- id: q004
+  query: "At the promise stage we quote the client an indicative rate off the LIBOR curve, but the murabaha contract itself fixes the profit at a flat 6.2% of cost and never moves. Is referencing LIBOR that way a problem?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS27-5.3, SS8-4.6]
+  difficulty: hard
+  category: profit_determination
+  rationale: "SS27-5.3 permits using an index such as LIBOR as a basis for determining the profit of a murabaha pledge provided the contract is concluded on a specific profit that does not vary, which is exactly the carve-out SS8-4.6 allows."
+
+- id: q005
+  query: "Collections wants to apply a 2% per month late charge on overdue murabaha instalments and book it to fee income. Can we?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS3-2.1.2, SS8-5.8]
+  difficulty: easy
+  category: late_payment
+  rationale: "SS3-2.1.2 prohibits stipulating any financial compensation as a penalty for delay, and SS8-5.8 bars the Institution from imposing any additional payment for its own benefit on a defaulting customer."
+
+- id: q006
+  query: "Alternative drafting on the same file: rather than a penalty, the customer undertakes to donate 2% of the overdue amount to charity, with our Shari'ah board verifying the money actually reaches charitable causes. Does that hold up?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS8-5.6, SS3-2.1.8]
+  difficulty: medium
+  category: late_payment
+  rationale: "SS8-5.6 permits an undertaking by the customer to donate an amount on late payment provided the Shari'ah Supervisory Board confirms it is spent on charity and not for the Institution's benefit."
+
+- id: q007
+  query: "Customer can't meet the schedule and is asking for another twelve months. Can we extend the murabaha maturity if he pays us something extra for the extension?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS8-5.7]
+  difficulty: easy
+  category: debt_rescheduling
+  rationale: "SS8-5.7 states it is not permissible to extend the date of payment in exchange for an additional payment on rescheduling, whether the debtor is solvent or insolvent."
+
+- id: q008
+  query: "A client has settled his murabaha two years ahead of schedule. We'd like to hand back a slice of the profit as a goodwill gesture. It was never promised in the contract. Is that OK?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS8-5.9]
+  difficulty: medium
+  category: early_settlement
+  rationale: "SS8-5.9 permits the Institution to give up part of the selling price on early payment provided it was not part of the contractual agreement."
+
+- id: q009
+  query: "Home finance on diminishing musharakah: the customer's undertaking is to buy our equity units back each year at the price we originally contributed for them. Legal says it keeps our return predictable. Can we document it that way?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS12-5.7]
+  difficulty: hard
+  category: equity_buyout_pricing
+  rationale: "SS12-5.7 expressly forbids stipulating that the equity share be acquired at original or face value, because that amounts to one partner guaranteeing the value of the other's equity."
+
+- id: q010
+  query: "Same diminishing musharakah structure, but the customer's undertaking is to acquire our units at market value on each purchase date. Acceptable?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS12-5.7, SS12-5.8]
+  difficulty: medium
+  category: equity_buyout_pricing
+  rationale: "SS12-5.7 permits a binding promise by one partner to acquire the other's equity share gradually at market value or a price agreed at the time of acquisition."
+
+- id: q011
+  query: "Corporate client is holding a 90-day bill of exchange and needs the cash now. Can we buy the paper off him at a discount to face?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS7-12.5.4, SS16-6.1]
+  difficulty: easy
+  category: debt_discounting
+  rationale: "SS7-12.5.4 treats discounting a bill of exchange before maturity as a form of riba, and SS16-6.1 states commercial papers may not be discounted."
+
+- id: q012
+  query: "Treasury wants a three-month forward to lock the USD/EGP rate on a payable. It is purely hedging, no speculation. Fine?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS1-2.2, SS1-2.3]
+  difficulty: easy
+  category: currency_forward
+  rationale: "SS1-2.2 prohibits forward currency contracts and SS1-2.3 closes the door specifically on dealing in the forward market even where the purpose is hedging."
+
+- id: q013
+  query: "Our equipment lease is drafted triple-net: the lessee carries all insurance and all maintenance including major overhauls, and we simply collect rent. Does that stand?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS9-5.1.7, SS9-5.1.8]
+  difficulty: hard
+  category: ijarah_maintenance
+  rationale: "SS9-5.1.7 bars the lessor from stipulating that the lessee undertake major maintenance, and SS9-5.1.8 requires insurance expense to be borne by the lessor even where the task is delegated to the lessee."
+
+- id: q014
+  query: "Ijarah over a warehouse: year one rent is a fixed SAR 400,000, and from year two it resets annually against a published benchmark with a stated ceiling and floor. Is a floating rent structured like that allowed?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS9-5.2.3]
+  difficulty: hard
+  category: ijarah_rental_benchmark
+  rationale: "SS9-5.2.3 permits floating rentals provided the first period is a specified lump sum and later periods follow a clear benchmark subject to a maximum and minimum ceiling."
+
+- id: q015
+  query: "In our commodity murabaha for personal finance the customer signs a power of attorney appointing us to sell the metal on his behalf immediately after he buys it from us. It keeps the operation to a single visit. Any issue?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS30-4.7, SS30-4.9]
+  difficulty: hard
+  category: tawarruq
+  rationale: "SS30-4.7 states the client shall not delegate the Institution to sell on his behalf a commodity he bought from that same Institution, and SS30-4.9 requires him to sell it himself or through an agent other than the Institution."
+
+- id: q016
+  query: "We're standing up tawarruq flows where the Bahrain entity buys the LME warrant, sells to the client, and our Malaysian subsidiary is the onward buyer. The metal never leaves the offshore warehouse. Can we go ahead?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS30-4.5, SS30-4.2]
+  difficulty: hard
+  category: cross_border_structuring
+  rationale: "SS30-4.5 requires the commodity to go to a genuine third party and not return by prior arrangement, and SS30-4.2 requires it to be identified and separated, neither of which can be settled from the description of a multi-entity cross-border arrangement without human review."
+
+- id: q017
+  query: "Agri financing: we'd sign the salam for 500 tonnes of wheat now and pay the farmer the salam price in thirty days once credit committee releases the funds. Workable?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS10-3.1.3, SS10-3.1.4]
+  difficulty: medium
+  category: salam_capital
+  rationale: "SS10-3.1.3 requires the salam capital to be paid immediately at the place the contract is concluded, allowing at most a two or three day exception, so a thirty-day deferral turns the capital into a debt contrary to SS10-3.1.4."
+
+- id: q018
+  query: "We're the buyer under a salam for barley. Can we sign a second, separate salam as seller to a miller on the same specification, so long as neither contract is conditional on the other?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS10-6.2, SS10-6.3]
+  difficulty: medium
+  category: parallel_salam
+  rationale: "SS10-6.2 permits the buyer in the first salam to conclude a parallel salam as seller, and SS10-6.3 makes it valid precisely on the condition that the obligations and rights of the two contracts stand alone."
+
+- id: q019
+  query: "Client owns machinery and needs liquidity. Can he sell it to us for cash and then buy the same machinery back from us on deferred murabaha?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS8-2.2.3, SS49-3.3]
+  difficulty: easy
+  category: inah
+  rationale: "SS8-2.2.3 requires the seller to be a third party and expressly bars a customer selling the item to the Institution and repurchasing it on murabaha, and SS49-3.3 prohibits any promise producing such an 'inah repurchase."
+
+- id: q020
+  query: "Can we sign an istisna'a to deliver a completed warehouse to a client before we own anything at all, no land and no materials?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS11-2.1.1]
+  difficulty: easy
+  category: istisna_ownership
+  rationale: "SS11-2.1.1 expressly permits the Institution and the customer to conclude an istisna'a before the Institution assumes title to the subject-matter or the materials it will be produced from."
+
+- id: q021
+  query: "The istisna'a contract carries a liquidated damages clause under which the contractor pays us an agreed sum for every week handover slips. Is that enforceable from a Shari'ah angle?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS11-6.6, SS3-2.3]
+  difficulty: medium
+  category: penalty_clause
+  rationale: "SS11-6.6 permits a fair penalty clause compensating the ultimate purchaser for the manufacturer's late delivery where the delay is not caused by force majeure, and SS3-2.3 confirms penalty clauses are permitted in istisna'a and construction contracts."
+
+- id: q022
+  query: "Brokerage client wants to sell shares he doesn't hold and borrow them from the broker before settlement. Can we execute?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS12-4.1.2.7, SS21-3.15]
+  difficulty: easy
+  category: short_selling
+  rationale: "SS12-4.1.2.7 states it is not permitted to sell shares one does not own and that a broker's promise to lend them at delivery confers neither ownership nor possession, and SS21-3.15 separately bars renting shares to sell and return the like."
+
+- id: q023
+  query: "The murabaha agreement lets us debit any account the customer holds with us if an instalment goes unpaid. Finance wants to apply it on a delinquent file. Same currency both sides. Is that within the rules?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS3-2.5.3]
+  difficulty: medium
+  category: set_off
+  rationale: "SS3-2.5.3 permits the Institution to stipulate in an indebtedness contract that it may recoup the amount due from any of the customer's accounts without further consent where the balance is in the same currency as the debt."
+
+- id: q024
+  query: "Screening a listed logistics name for the fund. Core business is clean. Interest-bearing borrowings sit at 22% of market cap, interest-bearing deposits at 8%, and 1.5% of income comes from a conventional finance associate. Can we hold it if we purify that 1.5%?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS21-3.4.2, SS21-3.4.3, SS21-3.4.4]
+  difficulty: hard
+  category: equity_screening
+  rationale: "SS21-3.4.2 caps interest-based borrowing at 30% of market capitalisation, SS21-3.4.3 caps interest-taking deposits at 30%, and SS21-3.4.4 caps prohibited income at 5%, all of which this name clears subject to eliminating the prohibited portion."
+
+- id: q025
+  query: "Same screening exercise, different name. The company lumps everything into one 'other income' line and won't break it out. Leverage looks well under the threshold. Can the fund buy it?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS21-3.4.4, SS21-3.4.8]
+  difficulty: medium
+  category: equity_screening
+  rationale: "SS21-3.4.4 makes the 5% prohibited income test decisive and directs that more effort be exerted where a source of income is not properly disclosed, and SS21-3.4.8 requires giving up the investment if the rules cannot be applied, so the missing disclosure blocks any firm verdict."
+
+- id: q026
+  query: "An unrelated corporate sponsor has volunteered, in a document entirely separate from the mudarabah agreement and without any fee, to make investors whole if the venture loses capital. He holds no shares in either party. Can we accept that undertaking?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS5-6.6, SS12-3.1.4.3]
+  difficulty: hard
+  category: third_party_guarantee
+  rationale: "SS5-6.6 permits a third party other than the Mudarib to volunteer to compensate investment losses provided the guarantee is not linked to the mudarabah contract, and the ownership and independence conditions in SS12-3.1.4.3 are all satisfied here."
+
+- id: q027
+  query: "A group company has offered to cover any capital loss investors suffer in our musharakah. It's a related entity inside the same group. Can we rely on that undertaking?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS12-3.1.4.3, SS45-4.2.4]
+  difficulty: hard
+  category: third_party_guarantee
+  rationale: "SS12-3.1.4.3 makes the answer turn on facts the question does not supply, namely whether either entity owns more than half of the other and whether the guarantee is free of consideration and unlinked to the contract, and SS45-4.2.4 imposes the same independence test."
+
+- id: q028
+  query: "Retail wants to market the mudarabah investment account with a guaranteed minimum annual return of 3% so it can compete with conventional term deposits. Can we offer that?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS40-2.2.2, SS13-8.7]
+  difficulty: medium
+  category: profit_guarantee
+  rationale: "SS40-2.2.2 says the Institution is not committed to guarantee investment accounts and may not pay any fixed or variable increment, and SS13-8.7 ties profit to the actual outcome at liquidation, but a guaranteed return on a profit-sharing account is an escalation category that must go to the Shari'ah board rather than be cleared by the system."
+
+- id: q029
+  query: "We're issuing investment sukuk over a portfolio that is roughly 55% murabaha receivables and 45% leased assets, and we want the certificates freely tradable on the secondary market. Does the asset mix work?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS17-5.1.2, SS21-3.19]
+  difficulty: hard
+  category: sukuk_issuance
+  rationale: "SS17-5.1.2 bars securitising debts for the purpose of trading while SS21-3.19 allows trading where tangible assets and rights carry the activity above a stated proportion, so a mixed-pool issuance sits on the boundary and is an escalation category."
+
+- id: q030
+  query: "Attached is the term sheet for the new auto finance product. Please approve it so we can launch next month."
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS29-3.4]
+  difficulty: easy
+  category: approval_request
+  rationale: "SS29-3.4 places a duty on the Institution to seek a fatwa for every operation it intends to pursue, so a request for product approval belongs with the Shari'ah Supervisory Board and not with an automated verdict."
+
+- id: q031
+  query: "What's the VAT treatment of the mark-up on a murabaha sale in the UAE? Is the profit element taxable supply?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: []
+  difficulty: easy
+  category: out_of_scope_tax
+  rationale: "Tax treatment is outside the AAOIFI Shari'ah Standards corpus entirely, so no clause governs the answer and the query must be escalated."
+
+- id: q032
+  query: "What risk weight does Basel III assign to an ijarah muntahia bittamleek asset sitting on our balance sheet?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: []
+  difficulty: easy
+  category: out_of_scope_prudential
+  rationale: "Prudential capital treatment is a banking regulation question with no governing clause in the Shari'ah Standards corpus."
+
+- id: q033
+  query: "Our conventional subsidiary is repricing its savings book. What base interest rate should we set for next quarter?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: []
+  difficulty: easy
+  category: out_of_scope_conventional_rate
+  rationale: "Setting a conventional interest rate is outside the corpus and outside the system's remit, so it must be escalated rather than answered."
+
+- id: q034
+  query: "Murabaha request came in where the supplier the customer nominated turns out to be his brother-in-law's trading company. Everything else on the file looks normal. Can we proceed?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS8-2.2.4, SS8-2.2.3]
+  difficulty: medium
+  category: related_party
+  rationale: "SS8-2.2.4 requires the Institution to verify, where the supplier has a blood or marital relationship with the customer, that the sale is not fictitious or a stratagem for 'inah, and that verification is a factual finding the query does not supply."
+
+- id: q035
+  query: "Customer wants to lease a warehouse from us. He's told us he'll be storing general merchandise and hasn't said more than that. Can we sign the ijarah?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS9-5.1.1, SS9-5.1.3]
+  difficulty: medium
+  category: permissible_use
+  rationale: "SS9-5.1.1 makes the permissibility of the lessee's use decisive and SS9-5.1.3 turns on whether the lessor knows or has reason to presume an impermissible purpose, so an undescribed cargo leaves the governing fact open."
+
+- id: q036
+  query: "Our Malaysian counterparty's Shari'ah committee has cleared a bay' al-'inah leg that our own policy rules out, and they want us to accept their sign-off for the joint deal. How do we resolve that?"
+  gold_verdict: NEEDS_REVIEW
+  gold_clauses: [SS29-7.4, SS29-6.4]
+  difficulty: hard
+  category: conflicting_fatwa
+  rationale: "SS29-7.4 contemplates referring a contested fatwa to a more authoritative board and SS29-6.4 warns against demanding a ruling aligned to a particular school, so a conflict between two boards is resolved by escalation, not by the system picking a side."
+
+- id: q037
+  query: "Can we issue a debit card that only draws on the customer's own cleared balance and carries no interest charge?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS2-3.1]
+  difficulty: easy
+  category: cards
+  rationale: "SS2-3.1 permits Institutions to issue debit cards as long as the cardholder does not exceed the balance available on his account and no interest charge arises."
+
+- id: q038
+  query: "On ATM cash withdrawals we want a flat SAR 15 per transaction regardless of how much is taken out. Permissible?"
+  gold_verdict: COMPLIANT
+  gold_clauses: [SS2-4.5.2, SS19-10.3.2]
+  difficulty: medium
+  category: qard_fees
+  rationale: "SS2-4.5.2 permits a flat service fee proportionate to the service but not one varying with the amount withdrawn, and SS19-10.3.2 confirms the charge must be certain and unlinked to the amount or the repayment period."
+
+- id: q039
+  query: "Customer's existing murabaha on a truck fleet matures next month and he can't clear it. Can we roll it into a fresh murabaha with him over the same fleet?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS8-2.2.8]
+  difficulty: hard
+  category: refinancing
+  rationale: "SS8-2.2.8 states it is not permitted to renew a murabaha contract on the same commodity that was the subject matter of a previous murabaha with the same customer, that is, to refinance the transaction."
+
+- id: q040
+  query: "We want to price letters of guarantee at 1.5% of the guaranteed amount per annum. That's where the market is. Any objection?"
+  gold_verdict: NON_COMPLIANT
+  gold_clauses: [SS5-6.1.1, SS5-3.1.5]
+  difficulty: medium
+  category: guarantee_fee
+  rationale: "SS5-6.1.1 prohibits taking remuneration for issuing a letter of guarantee where it is consideration for the guarantee itself, and SS5-3.1.5 bars any remuneration for providing a personal guarantee, leaving only recovery of actual administrative expenses."
