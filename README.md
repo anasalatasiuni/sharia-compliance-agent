@@ -626,10 +626,12 @@ production — see [`docs/PART2-technical-decisions.md`](docs/PART2-technical-de
 both handle Arabic (the tokenizer folds alef and ta-marbuta variants), but the
 indexed corpus is the English edition and no Arabic query has been evaluated.
 
-**Evaluated on one model, 40 cases.** Baseline is 0.925 accuracy with zero false
-`COMPLIANT` (`docs/PART2-technical-decisions.md` §3.0). Not yet run against a
-second model, so the cost/quality tradeoff in §2.2.1 remains open, and at n=40 the
-calibration finding is suggestive rather than settled.
+**Evaluated on one model, 40 cases, two runs.** Both scored 0.925 accuracy with
+zero false `COMPLIANT`, and both were measured before the guardrail fixes that
+followed them — see `docs/PART2-technical-decisions.md` §3.0, which records what
+changed and what was not re-measured. At n=40 against a non-deterministic model
+the aggregate is noisy; the two runs agreed on the score and disagreed on which
+cases failed.
 
 ---
 

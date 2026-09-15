@@ -404,54 +404,52 @@ measurement has already contradicted.
 
 ### 3.0 Baseline
 
-40 labelled cases, `claude-haiku-4.5`, index `bff37e1f657b9ae3`, prompt `v1`.
-$1.08, 469s wall clock.
+Two runs of 40 labelled cases on `claude-haiku-4.5`, index `bff37e1f657b9ae3`,
+prompt `v1`, `top_k=5`. About $1 and eight minutes each.
 
-| | |
-|---|---|
-| accuracy | **0.925** (37/40) |
-| **false `COMPLIANT`** | **0** |
-| missed escalation | 0 |
-| over-escalation | 3 |
-| recall@5 · MRR | 0.838 · 0.840 |
-| context precision | 0.266 |
+| | run 1 | run 2 |
+|---|---|---|
+| accuracy | 0.925 | 0.925 |
+| **false `COMPLIANT`** | **0** | **0** |
+| over-escalation | 3 | 2 |
+| missed escalation | 0 | 1 |
+| recall@5 · MRR | 0.838 · 0.840 | 0.811 · 0.870 |
+| context precision | 0.266 | 0.259 |
 
-```
-                 COMPLIANT  NON_COMPLIANT  NEEDS_REVIEW
-COMPLIANT               13              0             1
-NON_COMPLIANT            0             12             2
-NEEDS_REVIEW             0              0            12
-```
+**Read the two runs together, not either alone.** Identical configuration and an
+identical headline, with different failures underneath. At n=40 against a
+non-deterministic model the aggregate is noisy; what is stable is *which gate
+fires*, and that is the number worth acting on. A single run of this eval would
+have supported a more confident claim than the evidence actually carries.
 
-Nothing below the diagonal. Every error over-escalated; none got through. That is
-the one-directional property of §1.0 showing up as measurement rather than
-assertion, and it held under adversarial conditions too — an earlier run in which
-a rate limit had broken every upstream call still produced zero false
-`COMPLIANT`, because a failing dependency degrades to escalation by construction.
+**What held across both:** zero false `COMPLIANT`. It also held in a third,
+discarded run in which a rate limit had broken every upstream call — a failing
+dependency degrades to escalation by construction, so the property survives
+conditions the model never sees.
 
-Three findings the numbers contradict the design on:
+**What the failures were, and what happened to them.** Across both runs there
+were four distinct defects, and all four were in the guardrails rather than in
+retrieval or reasoning — in every case the governing clause was retrieved and the
+model reasoned correctly.
 
-**Context precision is 0.266.** Roughly three-quarters of what reaches the model
-is irrelevant — at `top_k=5`, about 3.7 clauses of noise per request. Retrieved
-context is also the uncacheable majority of the token bill (§2.3). `top_k=3` is
-the obvious experiment and it is both cheaper and plausibly *more* accurate,
-since noise degrades answers even when the right clause is present.
+| | cause | status |
+|---|---|---|
+| Polarity anchored to a repeated stem phrase | a quote beginning "the institution should" aligned to an earlier occurrence, so the text between read as an edit | fixed |
+| Elided quotes | `"...A... B..."` — the skipped span was read as an interior change to legal force | fixed |
+| Malformed citation id | the model wrote `SS3.7` for `SS12-3.7`; four of that case's five citations were valid | open |
+| Always-review read only the query | "cover any capital loss" never says "guarantee", so a case reserved to the ISSC was answered definitively | fixed |
 
-**Confidence is not calibrated.** The 0.90–0.95 band scored 1.00 and the
-0.95–1.00 band scored 0.83 — the most confident answers were the least accurate.
-At n=40 that is suggestive rather than conclusive, but it means
-`min_model_confidence` is not currently doing the work it was put there to do,
-and a threshold on an uncalibrated signal is closer to noise than to a control.
+The fourth is the one that mattered. It was not a wrong answer — it was a
+definitive answer to a question that was never the system's to answer, and it is
+the only failure in either run that landed below the diagonal.
 
-**Every failure was the same gate.** All three were `unresolved_citation` with the
-governing clause successfully retrieved: retrieval worked, the reasoning was
-sound, and citation checking rejected the evidence. One is fully diagnosed — the
-model wrote `SS3.7` for `SS12-3.7`, and four of that case's five citations were
-valid. Relaxing the gate would take accuracy to ~1.00, which is precisely why it
-has not been relaxed: a score bought by weakening a safety control is not the
-same score.
-
-### 3.1 Measure retrieval separately from reasoning
+**These numbers describe the code as it was at commit `423e676`, not as it ships.**
+Three of the four defects were fixed afterwards, each verified deterministically
+against the exact failing case rather than by re-running, and pinned as
+regression tests. The suite has not been re-run since, because each run costs
+real money and the specific claims were already established more cheaply. A
+fourth run would likely land between 0.95 and 1.00; that expectation is stated
+rather than measured, and should be read as such.
 
 This is the single most important structural choice in evaluating a RAG system,
 because the two failures have different fixes and are indistinguishable from the
