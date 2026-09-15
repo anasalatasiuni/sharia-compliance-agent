@@ -436,12 +436,44 @@ model reasoned correctly.
 |---|---|---|
 | Polarity anchored to a repeated stem phrase | a quote beginning "the institution should" aligned to an earlier occurrence, so the text between read as an edit | fixed |
 | Elided quotes | `"...A... B..."` — the skipped span was read as an interior change to legal force | fixed |
-| Malformed citation id | the model wrote `SS3.7` for `SS12-3.7`; four of that case's five citations were valid | open |
+| Malformed citation id | the model wrote `SS3.7` for `SS12-3.7`; four of that case's five citations were valid | open — did not recur on re-check, so it is intermittent rather than fixed |
 | Always-review read only the query | "cover any capital loss" never says "guarantee", so a case reserved to the ISSC was answered definitively | fixed |
 
 The fourth is the one that mattered. It was not a wrong answer — it was a
 definitive answer to a question that was never the system's to answer, and it is
 the only failure in either run that landed below the diagonal.
+
+**The fixes were re-checked on the five affected cases only** — $0.13 rather than
+$1 for a full run, which is what made verifying them affordable at all. Four now
+pass, with recall@5 and MRR both 1.000 across them: every governing clause reached
+the model at rank one. The fifth changed its failure mode, and that is worth
+stating plainly rather than filing as a win.
+
+#### The escalation rule is a trade, not a strict improvement
+
+Reading the assessment's own findings fixed q027 — a capital guarantee phrased as
+"cover any capital loss", which no query pattern matched and which was answered
+definitively. It also swallowed q009, a diminishing-musharakah buy-out at face
+value, which SS12-5.7 prohibits in flat terms and where `NON_COMPLIANT` is a
+perfectly good answer. One missed escalation traded for one over-escalation.
+
+Both cases turn on a capital guarantee. The difference is that one has a clause
+settling it outright and the other is a product-design question, and no
+deterministic signal available here separates them — "does a retrieved clause
+flatly prohibit this arrangement" is exactly the judgement the model is being
+asked to make, so using its answer to decide whether to trust its answer is
+circular.
+
+The trade is accepted in the direction of over-escalation, on the same asymmetry
+that governs everything else here: a wrong `NEEDS_REVIEW` costs a reviewer
+minutes, and a matter reserved to the ISSC being answered definitively is the
+failure the architecture exists to prevent.
+
+Worth recording that the test set's author flagged q009 as contestable when
+writing it, noting that a broader always-review rule would likely re-label it.
+That rule is now in place. **The label has deliberately not been changed** — a
+case that fails is evidence, and editing the test to match the code is how an
+eval stops meaning anything.
 
 **These numbers describe the code as it was at commit `423e676`, not as it ships.**
 Three of the four defects were fixed afterwards, each verified deterministically

@@ -150,6 +150,11 @@ def report(rows: list[dict], s: dict, cfg: dict) -> None:
 
     print(f"\n{BOLD}{'=' * 66}{RESET}")
     print(f"{BOLD}  EVAL — {cfg['model']}{RESET}")
+    if cfg.get("subset"):
+        print(f"{YELLOW}  SUBSET of {cfg['subset_of']} cases — targeted re-check, "
+              f"not a baseline.{RESET}")
+        print(f"{DIM}  Rates below are over the selected cases only and are not "
+              f"comparable to a full run.{RESET}")
     print(f"{DIM}  corpus {cfg['corpus_version']} · index {cfg['index_snapshot']}")
     print(f"  prompt {cfg['prompt_version']} · top_k {cfg['rerank_top_k']} · "
           f"min_conf {cfg['min_model_confidence']} · min_rerank {cfg['min_rerank_score']}{RESET}")
@@ -239,6 +244,10 @@ def report(rows: list[dict], s: dict, cfg: dict) -> None:
 async def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--limit", type=int)
+    ap.add_argument("--only", nargs="*", metavar="ID",
+                    help="Run just these case ids. Cheap way to re-verify a fix.")
+    ap.add_argument("--rerun-failed", metavar="RESULTS.json",
+                    help="Run only the cases that failed in a previous run.")
     ap.add_argument("--model")
     ap.add_argument("--concurrency", type=int, default=2,
                 help="Keep low. Concurrency 5 tripped provider rate limits.")
@@ -255,6 +264,24 @@ async def main() -> int:
         return 2
 
     cases = yaml.safe_load(TESTSET.read_text())
+
+    wanted: set[str] | None = None
+    if args.rerun_failed:
+        prior = json.loads(Path(args.rerun_failed).read_text())
+        wanted = {
+            c["id"] for c in prior["cases"]
+            if c.get("error") or c.get("actual_verdict") != c["gold_verdict"]
+        }
+        print(f"{DIM}re-running {len(wanted)} case(s) that failed in "
+              f"{Path(args.rerun_failed).name}{RESET}")
+    if args.only:
+        wanted = (wanted or set()) | set(args.only)
+    if wanted is not None:
+        missing = wanted - {c["id"] for c in cases}
+        if missing:
+            print(f"{RED}unknown case id(s): {sorted(missing)}{RESET}", file=sys.stderr)
+            return 2
+        cases = [c for c in cases if c["id"] in wanted]
     if args.limit:
         cases = cases[: args.limit]
 
@@ -292,6 +319,9 @@ async def main() -> int:
         "max_retrieval_rounds": settings.max_retrieval_rounds,
         "price_in": args.price_in,
         "price_out": args.price_out,
+        "subset": len(cases) < len(yaml.safe_load(TESTSET.read_text())),
+        "subset_of": len(yaml.safe_load(TESTSET.read_text())),
+        "case_ids": [c["id"] for c in cases],
     }
     s = score(rows)
     report(rows, s, cfg)
