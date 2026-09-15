@@ -22,6 +22,35 @@ from dataclasses import dataclass, field
 from .obs.trace import log
 
 
+def is_rate_limited(exc: BaseException) -> bool:
+    """Is this "slow down" rather than "I am broken"?
+
+    The distinction decides whether the circuit breaker should trip. A 429 means
+    the dependency is healthy and we are sending too fast; opening the breaker on
+    it converts a back-off signal into a full stop, and every in-flight request
+    then fails instantly against an open breaker rather than simply waiting.
+    Detected structurally so this module stays provider-agnostic.
+    """
+    return (
+        getattr(exc, "status_code", None) == 429
+        or getattr(getattr(exc, "response", None), "status_code", None) == 429
+        or type(exc).__name__ == "RateLimitError"
+    )
+
+
+def retry_after_seconds(exc: BaseException) -> float | None:
+    """Honour the server's own back-off hint when it sends one."""
+    headers = getattr(getattr(exc, "response", None), "headers", None) or {}
+    for key in ("retry-after", "Retry-After", "x-ratelimit-reset-requests"):
+        raw = headers.get(key)
+        if raw:
+            try:
+                return max(0.0, min(float(str(raw).rstrip("s")), 60.0))
+            except ValueError:
+                continue
+    return None
+
+
 class UpstreamUnavailable(RuntimeError):
     """Raised when a dependency is refusing work — breaker open, or retries exhausted."""
 
@@ -80,6 +109,7 @@ async def call_with_resilience[T](
     timeout: float,
     attempts: int = 3,
     base_delay: float = 0.4,
+    rate_limit_attempts: int = 6,
     retry_on: tuple[type[BaseException], ...] = (Exception,),
     do_not_retry_on: tuple[type[BaseException], ...] = (),
 ) -> T:
@@ -91,8 +121,10 @@ async def call_with_resilience[T](
     """
     breaker.before_call()
     last: BaseException | None = None
+    faults = 0        # failures that say the dependency is unhealthy
+    throttles = 0     # 429s, which say only that we are sending too fast
 
-    for attempt in range(1, attempts + 1):
+    while True:
         try:
             result = await asyncio.wait_for(fn(), timeout=timeout)
         except do_not_retry_on as exc:
@@ -100,21 +132,42 @@ async def call_with_resilience[T](
             raise UpstreamUnavailable(service, f"non-retryable: {exc}") from exc
         except (TimeoutError, *retry_on) as exc:
             last = exc
-            breaker.record_failure()
-            if attempt == attempts:
-                break
-            delay = random.uniform(0, base_delay * (2 ** (attempt - 1)))
+            limited = is_rate_limited(exc)
+
+            if limited:
+                throttles += 1
+                if throttles > rate_limit_attempts:
+                    break
+                # Wait the server's own hint if it sent one, else back off far
+                # harder than for a fault — a rate limit clears with patience,
+                # and retrying it in 400ms simply spends another unit of quota.
+                hinted = retry_after_seconds(exc)
+                delay = hinted if hinted is not None else random.uniform(
+                    1.0, min(2.0 * (2 ** (throttles - 1)), 30.0)
+                )
+            else:
+                # Only a genuine fault counts toward opening the breaker.
+                faults += 1
+                breaker.record_failure()
+                if faults >= attempts:
+                    break
+                delay = random.uniform(0, base_delay * (2 ** (faults - 1)))
+
             log(
                 "upstream.retry",
                 service=service,
-                attempt=attempt,
-                of=attempts,
+                kind="rate_limit" if limited else "fault",
+                attempt=throttles if limited else faults,
                 delay_ms=int(delay * 1000),
-                error=f"{type(exc).__name__}: {exc}",
+                error=f"{type(exc).__name__}: {str(exc)[:120]}",
             )
             await asyncio.sleep(delay)
         else:
             breaker.record_success()
             return result
 
-    raise UpstreamUnavailable(service, f"{attempts} attempts failed: {last}")
+    reason = (
+        f"rate limited after {throttles} waits" if throttles > rate_limit_attempts
+        else f"{faults} attempts failed"
+    )
+    raise UpstreamUnavailable(service, f"{reason}: {last}")
