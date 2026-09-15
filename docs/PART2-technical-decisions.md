@@ -339,7 +339,7 @@ Ranked by saving, quality-neutral first:
 | **Semantic cache** on normalised query, keyed to `index_snapshot` | $930–1,550 | Compliance questions repeat heavily; the same product question arrives from five people. A 30–50% hit rate is realistic. Keying on the snapshot means a re-index invalidates it for free. |
 | **Local reranker** (`SCA_RERANK_BACKEND=local`) | $675 | Removes the entire rerank line item *and* stops clause text leaving the jurisdiction. Free win twice over. |
 | **Tighter context** — 8 clauses → 5 | $300 | Also usually *improves* answers: noise degrades reasoning even when the right clause is present. |
-| **Prompt caching** on the system prompt | $190 | Modest, because only 20% of input is cacheable. Already implemented. |
+| **Prompt caching** on the system prompt | $190 | **Not implemented.** Modest anyway — the system prompt is a small share of input, and the retrieved clauses that dominate it vary per query and cannot be cached. Through an OpenAI-compatible gateway it also needs explicit breakpoints rather than coming for free. |
 | **Batch API** (`:batch`, −50%) for eval and backfill | — | Not the live path, but makes running evals on every PR cheap. |
 
 Free wins alone take **$93k → ~$40k/month**.

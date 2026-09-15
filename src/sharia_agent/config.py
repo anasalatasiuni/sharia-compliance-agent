@@ -62,6 +62,7 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_full_prompts: bool = True
     job_ttl_seconds: int = 3600
+    max_concurrent_assessments: int = 8
 
     # -- auth --------------------------------------------------------------
     principals: str = ""

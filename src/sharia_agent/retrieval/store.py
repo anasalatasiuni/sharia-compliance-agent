@@ -21,9 +21,16 @@ from qdrant_client import AsyncQdrantClient, models
 
 from ..config import Settings
 from ..models import Clause, RetrievedClause
+from ..resilience import CircuitBreaker, call_with_resilience
 
 DENSE = "dense"
 SPARSE = "bm25"
+
+# The vector store is a request-path dependency like the other three, and was
+# the one without a breaker. An unwrapped Qdrant outage escaped the pipeline's
+# UpstreamUnavailable handler entirely and surfaced as a bare 500 with no trace
+# id and no audit record — the opposite of the stated degradation behaviour.
+_store_breaker = CircuitBreaker(service="qdrant", failure_threshold=5)
 
 _FILTERABLE: dict[str, models.PayloadSchemaType] = {
     "standard_no": models.PayloadSchemaType.KEYWORD,
@@ -120,7 +127,7 @@ class VectorStore:
         sparse_vector: tuple[list[int], list[float]],
         limit: int,
         standard_no: str | None = None,
-        include_superseded: bool = False,
+        include_superseded: bool = True,
         corpus_version: str | None = None,
     ) -> list[RetrievedClause]:
         """Dense + lexical retrieval fused with Reciprocal Rank Fusion.
@@ -148,12 +155,17 @@ class VectorStore:
                 )
             )
 
-        res = await self.client.query_points(
-            collection_name=self.collection,
-            prefetch=prefetch,
-            query=models.FusionQuery(fusion=models.Fusion.RRF),
-            limit=limit,
-            with_payload=True,
+        async def call():
+            return await self.client.query_points(
+                collection_name=self.collection,
+                prefetch=prefetch,
+                query=models.FusionQuery(fusion=models.Fusion.RRF),
+                limit=limit,
+                with_payload=True,
+            )
+
+        res = await call_with_resilience(
+            call, service="qdrant", breaker=_store_breaker, timeout=20.0, attempts=3
         )
         return [
             RetrievedClause(clause=_clause_from_payload(p.payload), fused_score=p.score)
@@ -170,6 +182,10 @@ class VectorStore:
 
 
 # ---------------------------------------------------------------------------
+
+
+def breaker_state() -> dict[str, str]:
+    return {_store_breaker.service: _store_breaker.state}
 
 
 def _build_filter(
@@ -190,6 +206,11 @@ def _build_filter(
         must.append(
             models.FieldCondition(key="is_superseded", match=models.MatchValue(value=False))
         )
+    # Default is to retrieve superseded clauses rather than filter them out.
+    # Excluding them at query time made the SUPERSEDED_STANDARD guardrail dead
+    # code — it can only fire on a clause that reached it. Surfacing a repealed
+    # clause and escalating is the behaviour that was intended; silently
+    # pretending it does not exist is how a stale answer looks confident.
     return models.Filter(must=must) if must else None
 
 

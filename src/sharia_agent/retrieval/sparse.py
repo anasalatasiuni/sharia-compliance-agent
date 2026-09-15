@@ -1,9 +1,16 @@
 """Lexical (BM25) sparse vectors.
 
 Dense retrieval alone fumbles exactly the tokens that matter most in standards
-text: clause numbers ("2/2/2"), transliterated Arabic contract names
-(murabaha / muraabaha / murābaḥa), and negation-bearing legal phrases. The
-lexical half of hybrid search is what catches those.
+text: clause numbers ("2/2/2") and transliterated Arabic contract names
+(murabaha / muraabaha / murābaḥa). The lexical half of hybrid search catches
+those.
+
+It deliberately does *not* carry negation. "not", "shall", "may" and their
+neighbours are stopped below, because a term occurring in nearly every clause of
+a legal corpus has almost no IDF and contributes noise rather than signal to
+ranking. Legal force is checked where it can be checked precisely — against the
+clause a citation names, in `agent/guardrails.py` — not inferred from a
+bag-of-words score.
 
 Term frequencies are computed here; **IDF is left to Qdrant**, which applies it
 server-side across the whole collection via `Modifier.IDF`. That keeps the

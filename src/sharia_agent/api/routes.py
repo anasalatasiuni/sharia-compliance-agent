@@ -25,6 +25,7 @@ from ..models import Assessment
 from ..obs.trace import get_trace_id, log, new_trace_id, set_principal, set_trace_id
 from ..retrieval.embeddings import breaker_state as embed_breaker_state
 from ..retrieval.rerank import breaker_state as rerank_breaker_state
+from ..retrieval.store import breaker_state as store_breaker_state
 from .deps import Principal, require_assess
 
 router = APIRouter()
@@ -61,11 +62,19 @@ class JobState(BaseModel):
 
 @router.post(
     "/assess",
-    response_model=Assessment,
-    responses={202: {"model": JobAccepted}, 429: {"description": "Service at capacity"}},
+    # Deliberately not `response_model=Assessment`: this route returns an
+    # Assessment synchronously and a JobAccepted for ?mode=async, and declaring
+    # the former made FastAPI validate the job envelope against it and fail the
+    # async path outright with a 500. The shapes are documented via `responses`.
+    response_model=None,
+    responses={
+        200: {"model": Assessment},
+        202: {"model": JobAccepted},
+        429: {"description": "Service at capacity"},
+    },
     summary="Assess a proposal against the AAOIFI Shari'ah Standards",
 )
-async def assess(
+async def assess(  # noqa: PLR0913
     body: AssessRequest,
     request: Request,
     response: Response,
@@ -84,9 +93,13 @@ async def assess(
         job = await app.state.jobs.create(
             trace_id=get_trace_id(), principal_id=principal.id
         )
-        asyncio.create_task(
+        # Keep a reference: a bare create_task is only weakly held by the loop
+        # and can be garbage-collected mid-flight, silently abandoning the job.
+        task = asyncio.create_task(
             _run_job(app, job.id, body.query, principal.id, snapshot, get_trace_id())
         )
+        app.state.running.add(task)
+        task.add_done_callback(app.state.running.discard)
         response.status_code = status.HTTP_202_ACCEPTED
         return JobAccepted(
             job_id=job.id,
@@ -198,7 +211,8 @@ async def health(request: Request, response: Response):
         components["vector_store"] = {"status": "error", "error": f"{type(exc).__name__}"}
         ok = False
 
-    breakers = {**llm_breaker_state(), **embed_breaker_state(), **rerank_breaker_state()}
+    breakers = {**llm_breaker_state(), **embed_breaker_state(),
+                **rerank_breaker_state(), **store_breaker_state()}
     components["breakers"] = breakers
     if any(state == "open" for state in breakers.values()):
         ok = False

@@ -120,6 +120,30 @@ def quote_containment(quote: str, clause_text: str) -> float:
     return sum(block.size for block in matcher.get_matching_blocks()) / len(q)
 
 
+def _aligned_window(q_words: list[str], c_words: list[str], slack: int = 8) -> list[str]:
+    """The span of the clause the quote most plausibly came from.
+
+    Aligning a quote against the *whole* clause misfires when a stem phrase
+    recurs. "The institution should guarantee ... whereas it should not assume"
+    contains "institution should" twice, so a quote beginning with those words
+    anchors to the first occurrence and everything up to the real one reads as an
+    interior edit — reporting a polarity change where the quote is verbatim.
+
+    Anchoring on the longest matching run first, then comparing only within a
+    window around it, removes that whole class of false positive without
+    loosening what the check actually detects.
+    """
+    if not q_words or len(q_words) >= len(c_words):
+        return c_words
+    match = difflib.SequenceMatcher(
+        None, q_words, c_words, autojunk=False
+    ).find_longest_match(0, len(q_words), 0, len(c_words))
+    if match.size == 0:
+        return c_words
+    start = max(0, match.b - match.a - slack)
+    return c_words[start : start + len(q_words) + 2 * slack]
+
+
 def polarity_mismatch(quote: str, clause_text: str) -> str | None:
     """Name a legal-force token the quote changes, or None if polarity holds.
 
@@ -131,6 +155,7 @@ def polarity_mismatch(quote: str, clause_text: str) -> str | None:
     q_words, c_words = _words(quote), _words(clause_text)
     if not q_words:
         return None
+    c_words = _aligned_window(q_words, c_words)
 
     opcodes = difflib.SequenceMatcher(None, q_words, c_words, autojunk=False).get_opcodes()
     interior = [op for op in opcodes if op[0] != "equal"]

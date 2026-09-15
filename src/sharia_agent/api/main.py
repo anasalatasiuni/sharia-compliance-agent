@@ -11,14 +11,15 @@ from __future__ import annotations
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
 from ..agent.pipeline import CompliancePipeline
 from ..config import get_settings
 from ..ingest.index import load_manifest
 from ..jobs import JobStore
 from ..llm import LLM
-from ..obs.trace import configure_logging, log
+from ..obs.trace import configure_logging, get_trace_id, log
 from ..retrieval.embeddings import Embedder
 from ..retrieval.hybrid import Retriever
 from ..retrieval.rerank import build_reranker
@@ -51,7 +52,8 @@ async def lifespan(app: FastAPI):
     app.state.index_snapshot = manifest.get("index_snapshot", "unknown")
     app.state.pipeline = CompliancePipeline(retriever, llm, settings)
     app.state.jobs = JobStore(ttl_seconds=settings.job_ttl_seconds)
-    app.state.inflight = asyncio.Semaphore(8)
+    app.state.inflight = asyncio.Semaphore(settings.max_concurrent_assessments)
+    app.state.running = set()  # strong refs to in-flight async jobs
 
     log(
         "service.start",
@@ -82,4 +84,25 @@ app = FastAPI(
     ),
     lifespan=lifespan,
 )
+@app.exception_handler(Exception)
+async def unhandled(request: Request, exc: Exception) -> JSONResponse:
+    """Any unhandled failure still leaves as structured JSON carrying the trace id.
+
+    Starlette's default handler returns plain text, which breaks the contract
+    that every response is JSON and — worse — hands back a failure with nothing
+    to correlate against the logs.
+    """
+    trace_id = get_trace_id()
+    log("request.unhandled_error", error=f"{type(exc).__name__}: {exc}", path=request.url.path)
+    return JSONResponse(
+        status_code=500,
+        content={
+            "error": "internal_error",
+            "detail": "The request could not be completed. Quote the trace id when reporting this.",
+            "trace_id": trace_id,
+        },
+        headers={"x-trace-id": trace_id},
+    )
+
+
 app.include_router(router)

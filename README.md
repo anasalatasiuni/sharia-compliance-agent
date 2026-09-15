@@ -40,7 +40,7 @@ This buys three things a ReAct loop cannot:
 ```
   POST /assess                                        ┌──────────────────┐
   Authorization: Bearer <token>                       │  Qdrant          │
-         │                                            │  345 clauses     │
+         │                                            │  1,518 clauses   │
          ▼                                            │  dense + sparse  │
   ┌─────────────────────────────────────────┐         └────────▲─────────┘
   │ 1  INTAKE                               │                  │
@@ -311,7 +311,7 @@ curl -sS -X POST http://localhost:8000/assess \
   "escalations": [],
   "missing_information": [],
   "clauses_considered": ["SS8-3.1.1", "SS8-3.2.1", "…"],
-  "corpus_version": "aaoifi-en-2017@7e97db3fac813e01",
+  "corpus_version": "aaoifi-en-2017@145a0995711cf7ed",
   "model": "anthropic/claude-opus-5",
   "prompt_version": "v1",
   "latency_ms": 7412,
@@ -531,7 +531,7 @@ after the fact if it was not recorded.
 ## Testing
 
 ```bash
-pytest -q          # 25 tests, no network
+pytest -q          # 51 tests, no network
 ruff check .
 ```
 
@@ -586,10 +586,11 @@ exactly like a retrieval miss, and chasing the wrong one costs an afternoon.
 
 ## Known limitations
 
-**Corpus is a slice.** Eight of 61 AAOIFI standards, English only, one edition.
-Questions outside those contract families retrieve weakly and escalate — correct
-behaviour, but it narrows the useful surface. No CBUAE circulars, no HSA
-resolutions, no Mal-internal product policy, all of which would bind in practice.
+**Corpus is one edition, English only.** All 48 standards that parse cleanly are
+indexed, but that is still a single 2017 edition with no CBUAE circulars, no HSA
+resolutions and no Mal-internal product policy — any of which would bind in
+practice, and which together are the larger half of what actually governs a UAE
+product decision.
 
 **No supersession data.** The schema and the guardrail exist, but nothing
 populates `superseded_by`, because the 2017 edition was ingested as a flat
