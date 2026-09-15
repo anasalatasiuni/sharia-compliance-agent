@@ -1,14 +1,3 @@
----
-title: Shari'ah Compliance Agent
-emoji: ⚖️
-colorFrom: green
-colorTo: gray
-sdk: docker
-app_port: 8000
-pinned: false
-short_description: Auditable RAG over the AAOIFI Shari'ah Standards
----
-
 # Shari'ah Compliance Agent
 
 Decision support for Mal's internal compliance team. Give it a proposed product
@@ -387,26 +376,19 @@ python -m sharia_agent.ingest.cli --recreate
 
 ### 2. Deploy
 
-Two paths, both free.
+The image builds and runs anywhere that takes a Dockerfile. It needs ~150 MB of
+RAM and no persistent disk, since the index lives in the managed cluster.
 
-**Hugging Face Spaces** — no card, 2 vCPU / 16 GB, sleeps only after 48 hours of
-inactivity. Create a Space with SDK **Docker**, add the repo as a git remote and
-push; the config block at the top of this file supplies the rest. Secrets go in
-the Space's *Settings → Variables and secrets*.
+[`deploy/render.yaml`](deploy/render.yaml) is a working Render blueprint
+(*New → Blueprint*), which applies the region, plan, health-check path and the
+tuning values the eval baseline was measured at. Any other container host works
+the same way — build from the Dockerfile and set the four values below.
 
-**Render** — create a service from [`deploy/render.yaml`](deploy/render.yaml) via
-*New → Blueprint*, which applies the region, plan, health-check path and tuning
-values automatically. Note the free instance is 512 MB / 0.1 CPU and spins down
-after 15 minutes, so the first request after idle takes about a minute.
-
-Either way, four values must be set by hand and never committed:
-
-| variable | |
-|---|---|
-| `OPENROUTER_API_KEY` | Prefer a key funded with a small balance. It is the only control that fails closed if the bearer token is ever forwarded. |
-| `SCA_QDRANT_URL` | the cluster URL |
-| `SCA_QDRANT_API_KEY` | the cluster key |
-| `SCA_PRINCIPALS` | **Not the demo token.** See below. |
+Two constraints worth knowing before choosing a host. The service holds a
+long-lived process: circuit breakers accumulate failures across requests and the
+async job store lives in memory, so a serverless target silently degrades both
+rather than failing loudly. And an assessment takes 15-30 seconds, so any
+platform with a request timeout under ~60s will cut off the synchronous path.
 
 ### 3. Use a token that is not in this repo
 
