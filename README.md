@@ -1,3 +1,14 @@
+---
+title: Shari'ah Compliance Agent
+emoji: ⚖️
+colorFrom: green
+colorTo: gray
+sdk: docker
+app_port: 8000
+pinned: false
+short_description: Auditable RAG over the AAOIFI Shari'ah Standards
+---
+
 # Shari'ah Compliance Agent
 
 Decision support for Mal's internal compliance team. Give it a proposed product
@@ -376,9 +387,19 @@ python -m sharia_agent.ingest.cli --recreate
 
 ### 2. Deploy
 
-Push the repo to GitHub, then create a Render web service from
-[`deploy/render.yaml`](deploy/render.yaml). Set the four `sync: false` variables
-in the dashboard:
+Two paths, both free.
+
+**Hugging Face Spaces** — no card, 2 vCPU / 16 GB, sleeps only after 48 hours of
+inactivity. Create a Space with SDK **Docker**, add the repo as a git remote and
+push; the config block at the top of this file supplies the rest. Secrets go in
+the Space's *Settings → Variables and secrets*.
+
+**Render** — create a service from [`deploy/render.yaml`](deploy/render.yaml) via
+*New → Blueprint*, which applies the region, plan, health-check path and tuning
+values automatically. Note the free instance is 512 MB / 0.1 CPU and spins down
+after 15 minutes, so the first request after idle takes about a minute.
+
+Either way, four values must be set by hand and never committed:
 
 | variable | |
 |---|---|
