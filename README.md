@@ -1,5 +1,8 @@
 # Shari'ah Compliance Agent
 
+**Live:** [https://shariacomplianceagent-agay4f9w.b4a.run](https://shariacomplianceagent-agay4f9w.b4a.run) · [`/health`](https://shariacomplianceagent-agay4f9w.b4a.run/health) · [`/docs`](https://shariacomplianceagent-agay4f9w.b4a.run/docs)
+(`POST /assess` needs a bearer token — supplied with the submission.)
+
 Decision support for Mal's internal compliance team. Give it a proposed product
 or transaction in plain English; it returns an evidence-backed preliminary
 assessment against the AAOIFI Shari'ah Standards, with every claim cited to a
@@ -419,11 +422,16 @@ about a minute.** Subsequent ones are normal.
 ### Verifying a deployment
 
 ```bash
-curl -s https://<your-service>.onrender.com/health | jq   # expect points: 1518
-curl -sS -X POST https://<your-service>.onrender.com/assess \
+curl -s https://shariacomplianceagent-agay4f9w.b4a.run/health | jq        # expect points: 1518
+
+curl -sS -X POST https://shariacomplianceagent-agay4f9w.b4a.run/assess \
   -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
   -d '{"query": "Can Mal offer a savings account paying a fixed 4% annual return?"}'
 ```
+
+The instance runs on Back4App Containers, with the index in a Qdrant Cloud free
+cluster. First request after a quiet period may be slow while the container
+wakes; `/health` is the cheapest way to warm it.
 
 `/health` returning `503` with `manifest_mismatch` means the service is pointed at
 a different index than the one it was built against — re-run the ingest, or fix
