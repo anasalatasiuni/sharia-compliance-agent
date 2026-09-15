@@ -92,6 +92,19 @@ class Settings(BaseSettings):
             raise ValueError(f"rerank_backend must be one of {sorted(allowed)}")
         return v.lower()
 
+    @property
+    def has_openrouter_key(self) -> bool:
+        """Whether a usable key is configured.
+
+        `.env.example` ships `sk-or-v1-...` as a placeholder and bootstrap copies
+        it verbatim, so a plain truthiness test reports a healthy service that
+        fails on its first assessment with a provider 401. Treating the
+        placeholder as absent puts that failure in `/health`, where it is
+        actionable, rather than in the first request.
+        """
+        key = self.openrouter_api_key.strip()
+        return bool(key) and "..." not in key
+
     def parsed_principals(self) -> dict[str, dict]:
         """Parse SCA_PRINCIPALS into {token: {"id": ..., "scopes": {...}}}.
 

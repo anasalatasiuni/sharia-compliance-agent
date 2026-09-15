@@ -249,7 +249,9 @@ curl -sS -X POST localhost:8000/assess \
 
 The index ships with the repo as a Qdrant snapshot, so nothing has to be
 re-embedded. An OpenRouter key is needed only for the reasoning and reranking
-calls — about $0.02 per assessment. Retrieval can be exercised for free:
+calls — about $0.02 per assessment; until one is set, `/health` reports
+`degraded` with `credentials.openrouter: false` rather than failing later at the
+first request. Retrieval itself is free and works immediately:
 
 ```bash
 python scripts/retrieval_debug.py "can we sell before we own it" \
@@ -555,7 +557,7 @@ after the fact if it was not recorded.
 ## Testing
 
 ```bash
-pytest -q          # 57 tests, no network
+pytest -q          # 63 tests, no network
 ruff check .
 ```
 
@@ -565,7 +567,10 @@ despite a clean draft, and the one-directional invariant stated directly as a
 test. `tests/test_pipeline.py` drives the state machine against fake providers:
 the seed search always runs, the retrieval loop is genuinely bounded, repeated
 identical searches are suppressed, and an upstream failure degrades to escalation
-rather than to an answer.
+rather than to an answer. `tests/test_api.py` covers the HTTP boundary — auth,
+error mapping, and the job-ownership check. `tests/test_resilience.py` pins the
+distinction between a fault and a rate limit, which is the bug that contaminated
+the first eval run.
 
 ---
 

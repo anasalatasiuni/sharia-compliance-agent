@@ -49,7 +49,19 @@ else
 fi
 
 say ""
-say "ready. next:"
-say "  1. put your OpenRouter key in .env"
-say "  2. docker compose up api          (or: uvicorn sharia_agent.api.main:app)"
-say "  3. curl localhost:8000/health"
+if grep -q '^OPENROUTER_API_KEY=sk-or-v1-\.\.\.$' .env 2>/dev/null; then
+  say "the index is ready. .env still holds the placeholder key, so /health will"
+  say "report degraded until you replace it:"
+  say ""
+  say "  1. set OPENROUTER_API_KEY in .env"
+  say "  2. docker compose up api        (or: uvicorn sharia_agent.api.main:app)"
+  say "  3. curl localhost:8000/health"
+  say ""
+  say "retrieval needs no key and works now:"
+  say "  python scripts/retrieval_debug.py 'can we sell before we own it' \\"
+  say "    --expect SS8-3.1.1 --no-rerank"
+else
+  say "ready:"
+  say "  docker compose up api           (or: uvicorn sharia_agent.api.main:app)"
+  say "  curl localhost:8000/health"
+fi

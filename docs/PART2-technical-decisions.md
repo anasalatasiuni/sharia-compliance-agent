@@ -825,6 +825,17 @@ when it matters.
 **11. No per-principal spend controls.** *Cost:* one script can run up an unbounded
 bill against a $0.062/request endpoint.
 
+**12. No public instance.** The brief asked for a deployed URL and this submission
+does not carry one. Free container hosting without a payment method has closed:
+Render, Koyeb and Fly require a card, Hugging Face Spaces made the Docker runtime
+paid in July 2026, and Back4App's free URLs expire an hour after issue — which is
+how the one this repo originally shipped went dead. What exists instead is the
+deployment path itself, exercised end to end against a Qdrant Cloud cluster:
+`deploy/render.yaml` carries the tuning the eval was measured at, and
+`scripts/bootstrap.sh` restores the committed index so `docker compose up` gives a
+working system in about two seconds without re-embedding. *Cost:* a reviewer has to
+run it rather than click it.
+
 ---
 
 ## Appendix — where the numbers come from

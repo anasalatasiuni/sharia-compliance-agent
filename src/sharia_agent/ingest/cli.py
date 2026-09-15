@@ -107,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
         print("\n--dry-run: nothing indexed")
         return 0
 
-    if not settings.openrouter_api_key:
+    if not settings.has_openrouter_key:
         print("\nOPENROUTER_API_KEY is not set — cannot embed. See .env.example.",
               file=sys.stderr)
         return 2

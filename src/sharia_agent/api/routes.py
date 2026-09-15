@@ -230,7 +230,7 @@ async def health(request: Request, response: Response):
     if any(state == "open" for state in breakers.values()):
         ok = False
 
-    components["credentials"] = {"openrouter": bool(settings.openrouter_api_key)}
+    components["credentials"] = {"openrouter": settings.has_openrouter_key}
     ok &= all(components["credentials"].values())
 
     body = {
