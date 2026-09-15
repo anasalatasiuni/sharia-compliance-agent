@@ -28,7 +28,7 @@ import uuid
 from dataclasses import dataclass
 
 from ..config import Settings
-from ..llm import LLM, Usage
+from ..llm import LLM, track_usage
 from ..models import (
     Assessment,
     AuditRecord,
@@ -105,40 +105,44 @@ class CompliancePipeline:
         retrieved: list[RetrievedClause] = []
         draft: DraftAssessment | None = None
 
-        try:
-            # ---- 2 RETRIEVE + 3 REFINE -----------------------------------
-            with span("evidence") as s:
-                retrieved = await self._gather_evidence(safe_query, audit)
-                s.annotate(clauses=len(retrieved))
-            audit.stages.append(StageTiming(stage="evidence", ms=s.ms))
+        # One block around everything: retrieval embeddings, the refinement
+        # turns, reranking and the reasoning call all land in the same total.
+        # The unit that matters for cost is a completed assessment, not a call.
+        with track_usage() as spend:
+            try:
+                # ---- 2 RETRIEVE + 3 REFINE -----------------------------------
+                with span("evidence") as s:
+                    retrieved = await self._gather_evidence(safe_query, audit)
+                    s.annotate(clauses=len(retrieved))
+                audit.stages.append(StageTiming(stage="evidence", ms=s.ms))
 
-            if retrieved:
-                audit.corpus_version = retrieved[0].clause.corpus_version
-            audit.retrieved = retrieved
+                if retrieved:
+                    audit.corpus_version = retrieved[0].clause.corpus_version
+                audit.retrieved = retrieved
 
-            # ---- 4 GATE A -------------------------------------------------
-            gate_a = guardrails.check_retrieval(retrieved, self.settings)
-            blocking = [
-                e for e in gate_a if e.code is EscalationCode.WEAK_RETRIEVAL
-            ]
-            if blocking:
-                # Reasoning over evidence this thin produces confident nonsense.
-                # Skip the model call entirely — it saves the spend and the answer
-                # would have been escalated regardless.
-                log("gate_a.blocked", reasons=[e.code.value for e in blocking])
-            else:
-                # ---- 5 REASON ---------------------------------------------
-                draft = await self._reason(safe_query, retrieved, audit)
+                # ---- 4 GATE A -------------------------------------------------
+                gate_a = guardrails.check_retrieval(retrieved, self.settings)
+                blocking = [
+                    e for e in gate_a if e.code is EscalationCode.WEAK_RETRIEVAL
+                ]
+                if blocking:
+                    # Reasoning over evidence this thin produces confident nonsense.
+                    # Skip the model call entirely — it saves the spend and the answer
+                    # would have been escalated regardless.
+                    log("gate_a.blocked", reasons=[e.code.value for e in blocking])
+                else:
+                    # ---- 5 REASON ---------------------------------------------
+                    draft = await self._reason(safe_query, retrieved, audit)
 
-        except UpstreamUnavailable as exc:
-            log("pipeline.upstream_unavailable", service=exc.service, reason=exc.reason)
-            audit.error = str(exc)
-            prior.append(
-                Escalation(
-                    code=EscalationCode.UPSTREAM_ERROR,
-                    detail=f"{exc.service} unavailable: {exc.reason}",
+            except UpstreamUnavailable as exc:
+                log("pipeline.upstream_unavailable", service=exc.service, reason=exc.reason)
+                audit.error = str(exc)
+                prior.append(
+                    Escalation(
+                        code=EscalationCode.UPSTREAM_ERROR,
+                        detail=f"{exc.service} unavailable: {exc.reason}",
+                    )
                 )
-            )
 
         # ---- 6 VALIDATE + 7 GATE B ---------------------------------------
         with span("guardrails") as s:
@@ -155,6 +159,9 @@ class CompliancePipeline:
             )
         audit.stages.append(StageTiming(stage="guardrails", ms=s.ms))
 
+        audit.usage = TokenUsage(
+            input_tokens=spend.input_tokens, output_tokens=spend.output_tokens
+        )
         audit.draft = draft
         audit.final_verdict = verdict
         audit.escalations = escalations
@@ -245,7 +252,6 @@ class CompliancePipeline:
                     tools=TOOLS,
                     max_tokens=1024,
                 )
-                self._add_usage(audit, response.usage)
                 calls = response.tool_calls
                 s.annotate(tool_calls=len(calls), finish_reason=response.finish_reason)
 
@@ -331,13 +337,12 @@ class CompliancePipeline:
         user = prompts.build_user_message(query, [r.clause for r in retrieved])
 
         with span("reason", clauses=len(retrieved)) as s:
-            draft, usage = await self.llm.complete_structured(
+            draft, _ = await self.llm.complete_structured(
                 output_model=DraftAssessment,
                 messages=[{"role": "user", "content": user}],
                 system=prompts.SYSTEM,
                 max_tokens=4096,
             )
-            self._add_usage(audit, usage)
             s.annotate(
                 finding=draft.finding.value if draft else None,
                 confidence=draft.confidence if draft else None,
@@ -347,21 +352,6 @@ class CompliancePipeline:
         return draft
 
     # -- shared ------------------------------------------------------------
-
-    @staticmethod
-    def _add_usage(audit: AuditRecord, usage: Usage) -> None:
-        """Token spend accumulates across every call a single assessment makes.
-
-        Recorded per assessment rather than per call because the unit that
-        matters for cost is a completed question, not an HTTP request — a cheap
-        request that needed three retrieval rounds is not cheap.
-        """
-        audit.usage = TokenUsage(
-            input_tokens=audit.usage.input_tokens + usage.input_tokens,
-            output_tokens=audit.usage.output_tokens + usage.output_tokens,
-            cache_read_input_tokens=audit.usage.cache_read_input_tokens,
-            cache_creation_input_tokens=audit.usage.cache_creation_input_tokens,
-        )
 
 
 def audit_to_json(audit: AuditRecord) -> str:

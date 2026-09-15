@@ -302,27 +302,35 @@ conclusion.
 
 ### 2.3 What breaks second: model spend
 
-At current settings, per assessment:
+Per assessment, **measured** on the running system rather than estimated
+(the audit record now counts every call, reranking included):
 
-| Call | Model | Tokens (in/out) | Cost |
-|---|---|---|---|
-| Reasoning | `claude-opus-5` | 4,250 / 600 | $0.0363 |
-| Refinement (~60% of requests) | `claude-opus-5` | 3,500 / 80 | $0.0117 |
-| Rerank (~1.5 rounds) | `claude-haiku-4.5` | 7,000 / 400 | $0.0135 |
-| Embeddings | `bge-m3` | — | ~$0.0005 |
-| **Total** | | | **≈ $0.062** |
+| | tokens in | tokens out |
+|---|---:|---:|
+| Pipeline — retrieval turns + reasoning | 4,709 | 1,368 |
+| Reranking — 40 candidates | 5,608 | 613 |
+| **Total** | **10,317** | **1,981** |
 
-**50,000/day ≈ $3,100/day ≈ $93,000/month ≈ $1.1M/year.**
+Reranking is **54% of input tokens**, which is not where intuition puts it.
+
+| model | $/assessment | at 50,000/day |
+|---|---:|---:|
+| Haiku 4.5 throughout | $0.0202 | $1,010/day · ~$30k/month |
+| Opus 5 reasoning, Haiku reranking | $0.0664 | $3,320/day · ~$100k/month |
+
+At the Opus figure that is **~$1.2M/year**.
 
 That is a real number and worth attacking, but note the ordering: it is roughly
 a fifth of what a 5-percentage-point swing in escalation rate costs (§2.2). Model
 spend is the second constraint, not the first.
 
-The useful detail is *where* the tokens are. Of the 4,250 input tokens on the
-reasoning call, **~3,200 are retrieved clauses** — which vary per query and
-therefore **cannot be cached**. Only the ~850-token system prompt is cacheable.
-So the obvious lever is nearly worthless here, and the real lever is retrieving
-fewer, better clauses.
+The useful detail is *where* the tokens are, and measuring moved the answer.
+Reranking alone is 5,608 input tokens — more than the whole reasoning path —
+because it ships 40 candidate clauses to be scored. And of the reasoning call's
+own input, the large majority is retrieved clause text, which varies per query and
+therefore **cannot be cached**; only the system prompt is cacheable. So prompt
+caching is nearly worthless here, and the two real levers are reranking locally
+and retrieving fewer, better clauses.
 
 Ranked by saving, quality-neutral first:
 

@@ -12,7 +12,7 @@ import pytest
 
 from sharia_agent.agent.pipeline import CompliancePipeline
 from sharia_agent.config import Settings
-from sharia_agent.llm import LLMResponse, ToolCall, Usage
+from sharia_agent.llm import LLMResponse, ToolCall, Usage, record_usage
 from sharia_agent.models import (
     Citation,
     Clause,
@@ -65,6 +65,9 @@ class FakeLLM:
     async def complete(self, *, messages, system=None, tools=None, max_tokens=2048, model=None):
         self.complete_calls += 1
         calls = self._tool_script.pop(0) if self._tool_script else []
+        # The real client reports usage through record_usage(); a fake that does
+        # not would let a regression in usage accounting pass unnoticed.
+        record_usage(Usage(100, 20))
         return LLMResponse(
             text="" if calls else "DONE",
             tool_calls=calls,
@@ -76,6 +79,7 @@ class FakeLLM:
     async def complete_structured(self, *, output_model, messages, system=None,
                                   max_tokens=4096, model=None):
         self.structured_calls += 1
+        record_usage(Usage(2000, 300))
         return self._draft, Usage(2000, 300)
 
 

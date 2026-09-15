@@ -30,6 +30,7 @@ import json
 from typing import Protocol
 
 from ..config import Settings
+from ..llm import record_usage, usage_from
 from ..obs.trace import log
 from ..resilience import CircuitBreaker, UpstreamUnavailable, call_with_resilience
 
@@ -140,6 +141,10 @@ class LLMReranker:
             timeout=60.0,
             attempts=2,
         )
+        # Reranking is a real line item — roughly 43% of an assessment's token
+        # cost on Haiku — so it has to reach the audit record like any other call.
+        record_usage(usage_from(response))
+
         content = response.choices[0].message.content or "{}"
         try:
             rankings = json.loads(content).get("rankings", [])

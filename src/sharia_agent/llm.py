@@ -15,6 +15,9 @@ assessment, whose shape is enforced by the API rather than requested in prose.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any, TypeVar
 
@@ -58,6 +61,40 @@ class Usage:
             self.input_tokens + other.input_tokens,
             self.output_tokens + other.output_tokens,
         )
+
+
+# Token spend is accumulated per request rather than returned call-by-call.
+# Reranking calls the client directly — it is not a `complete()` — so a
+# return-value convention silently missed it, and reranking is ~43% of the cost
+# of an assessment on Haiku. A context variable catches every call through this
+# module regardless of who makes it, and is per-task under asyncio.
+_usage_ctx: ContextVar[Usage | None] = ContextVar("llm_usage", default=None)
+
+
+@contextmanager
+def track_usage() -> Iterator[Usage]:
+    """Accumulate token usage of every LLM call made inside this block."""
+    total = Usage()
+    token = _usage_ctx.set(total)
+    try:
+        yield total
+    finally:
+        _usage_ctx.reset(token)
+
+
+def record_usage(usage: Usage) -> None:
+    """Add one call's usage to the enclosing `track_usage` block, if any."""
+    if (acc := _usage_ctx.get()) is not None:
+        acc.input_tokens += usage.input_tokens
+        acc.output_tokens += usage.output_tokens
+
+
+def usage_from(response: Any) -> Usage:
+    u = getattr(response, "usage", None)
+    return Usage(
+        input_tokens=getattr(u, "prompt_tokens", 0) or 0,
+        output_tokens=getattr(u, "completion_tokens", 0) or 0,
+    )
 
 
 @dataclass
@@ -234,15 +271,13 @@ def _to_llm_response(response: Any) -> LLMResponse:
             arguments = {}
         calls.append(ToolCall(id=call.id, name=call.function.name, arguments=arguments))
 
-    usage = getattr(response, "usage", None)
+    usage = usage_from(response)
+    record_usage(usage)
     return LLMResponse(
         text=message.content or "",
         tool_calls=calls,
         finish_reason=choice.finish_reason or "stop",
-        usage=Usage(
-            input_tokens=getattr(usage, "prompt_tokens", 0) or 0,
-            output_tokens=getattr(usage, "completion_tokens", 0) or 0,
-        ),
+        usage=usage,
         raw_message=message.model_dump(exclude_none=True),
     )
 
