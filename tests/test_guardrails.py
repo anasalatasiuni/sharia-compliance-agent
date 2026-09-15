@@ -256,3 +256,55 @@ def test_partial_quotes_on_word_boundaries_are_accepted(settings, span):
     }[span]
     _, escalations = guardrails.decide("q", cited(quote), ocr_retrieved(), settings)
     assert escalations == [], (span, escalations)
+
+
+def test_an_elided_quote_is_verified_span_by_span(settings):
+    """`...` between two spans is a quoting convention, not an edit.
+
+    Three correct citations were escalated in an eval run because the text a
+    model skipped over — having marked the skip explicitly — was read as an
+    interior change to the clause's legal force.
+    """
+    quote = (
+        "The Institution shall not sell any item in a Murabahah transaction"
+        "... before the Institution concludes a urchase contract with the supplier"
+    )
+    _, escalations = guardrails.decide("q", cited(quote), ocr_retrieved(), settings)
+    assert escalations == [], escalations
+
+
+def test_elision_cannot_smuggle_text_that_is_not_in_the_clause(settings):
+    """Each fragment still has to be real — elision is not a wildcard."""
+    quote = "The Institution shall not sell any item... and may waive the ownership requirement entirely"
+    _, escalations = guardrails.decide("q", cited(quote), ocr_retrieved(), settings)
+    assert any(e.code is EscalationCode.UNRESOLVED_CITATION for e in escalations)
+
+
+def test_an_always_review_concern_escalates_however_the_request_was_worded(settings):
+    """The escalation trigger must read the assessment, not only the query.
+
+    A request saying "cover any capital loss" describes exactly the arrangement
+    the guarantee patterns exist for, and matches none of them. The model
+    identified it correctly and the verdict was returned anyway.
+    """
+    from sharia_agent.models import ShariahConcern
+
+    draft_with_concern = draft(concerns=[ShariahConcern.PROFIT_GUARANTEE])
+    verdict_, escalations = guardrails.decide(
+        "A group company will cover any capital loss investors suffer in our musharakah.",
+        draft_with_concern, retrieved(), settings,
+    )
+    assert verdict_ is Verdict.NEEDS_REVIEW
+    assert any(e.code is EscalationCode.ALWAYS_REVIEW_CATEGORY for e in escalations)
+
+
+def test_ordinary_concerns_do_not_escalate(settings):
+    """Only concerns reserved to the ISSC escalate; riba and gharar are the
+    bread and butter of what the system is for."""
+    from sharia_agent.models import ShariahConcern
+
+    verdict_, escalations = guardrails.decide(
+        "q", draft(concerns=[ShariahConcern.RIBA, ShariahConcern.GHARAR]),
+        retrieved(), settings,
+    )
+    assert escalations == []

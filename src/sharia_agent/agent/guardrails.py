@@ -22,6 +22,7 @@ from ..models import (
     EscalationCode,
     ModelFinding,
     RetrievedClause,
+    ShariahConcern,
     Verdict,
 )
 
@@ -70,6 +71,11 @@ ALWAYS_REVIEW: list[tuple[str, re.Pattern[str]]] = [
 ]
 
 _WS = re.compile(r"\s+")
+# "... " between two spans is a quoting convention, not an edit. A model that
+# elides with an ellipsis is signalling the omission honestly; treating the
+# skipped text as an interior change flagged three correct citations as
+# polarity violations.
+_ELLIPSIS = re.compile(r"\s*(?:\.\s*\.\s*\.|…|\[\s*\.{2,}\s*\])\s*")
 _WORD = re.compile(r"[a-z0-9]+")
 
 # Quote checking answers two separate questions, and one metric cannot do both.
@@ -105,6 +111,11 @@ def _norm(text: str) -> str:
 
 def _words(text: str) -> list[str]:
     return _WORD.findall(_norm(text))
+
+
+def quote_fragments(quote: str) -> list[str]:
+    """Split an elided quote into the spans it actually claims to reproduce."""
+    return [f for f in (part.strip() for part in _ELLIPSIS.split(quote)) if f]
 
 
 def quote_containment(quote: str, clause_text: str) -> float:
@@ -208,7 +219,12 @@ def verify_citations(
         if not citation.quote:
             continue
 
-        score = quote_containment(citation.quote, clause.text)
+        # Each elided span is verified on its own terms. The check asks whether
+        # the text quoted is really in the clause and says the same thing — not
+        # whether the quote is a complete restatement of it.
+        fragments = quote_fragments(citation.quote)
+        scores = [quote_containment(f, clause.text) for f in fragments]
+        score = min(scores) if scores else 0.0
         if score < QUOTE_SIMILARITY_FLOOR:
             problems.append(
                 Escalation(
@@ -221,7 +237,10 @@ def verify_citations(
             )
             continue
 
-        if (mismatch := polarity_mismatch(citation.quote, clause.text)) is not None:
+        mismatch = next(
+            (m for f in fragments if (m := polarity_mismatch(f, clause.text))), None
+        )
+        if mismatch is not None:
             problems.append(
                 Escalation(
                     code=EscalationCode.UNRESOLVED_CITATION,
@@ -243,12 +262,33 @@ def verify_citations(
     return problems
 
 
-def check_query_category(query: str) -> list[Escalation]:
-    return [
+# Concerns that route to a human however the request was phrased. A capital or
+# profit guarantee on a profit-sharing contract is the ISSC's call, and whether
+# it escalates must not depend on the requester happening to use the word
+# "guarantee" — "cover any capital loss" is the same arrangement and matched
+# none of the patterns below.
+ALWAYS_REVIEW_CONCERNS = frozenset({ShariahConcern.PROFIT_GUARANTEE})
+
+
+def check_query_category(
+    query: str, concerns: list[ShariahConcern] | None = None
+) -> list[Escalation]:
+    out = [
         Escalation(code=EscalationCode.ALWAYS_REVIEW_CATEGORY, detail=reason)
         for reason, pattern in ALWAYS_REVIEW
         if pattern.search(query)
     ]
+    for concern in ALWAYS_REVIEW_CONCERNS.intersection(concerns or ()):
+        out.append(
+            Escalation(
+                code=EscalationCode.ALWAYS_REVIEW_CATEGORY,
+                detail=(
+                    f"the assessment itself identifies {concern.value!r}, which is "
+                    "reserved to the ISSC regardless of how the request was worded"
+                ),
+            )
+        )
+    return out
 
 
 def check_retrieval(
@@ -305,7 +345,7 @@ def decide(
 ) -> tuple[Verdict, list[Escalation]]:
     """Map a draft onto the returned verdict. The only place that mapping happens."""
     escalations: list[Escalation] = list(prior or [])
-    escalations += check_query_category(query)
+    escalations += check_query_category(query, draft.concerns if draft else None)
     escalations += check_retrieval(retrieved, settings)
 
     if draft is None:
