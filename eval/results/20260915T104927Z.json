@@ -1,0 +1,349 @@
+{
+  "config": {
+    "model": "anthropic/claude-haiku-4.5",
+    "rerank_backend": "llm",
+    "rerank_model": "anthropic/claude-haiku-4.5",
+    "embed_model": "baai/bge-m3",
+    "corpus_version": "aaoifi-en-2017@145a0995711cf7ed",
+    "index_snapshot": "bff37e1f657b9ae3",
+    "prompt_version": "v1",
+    "rerank_top_k": 5,
+    "min_model_confidence": 0.7,
+    "min_rerank_score": 0.35,
+    "max_retrieval_rounds": 3,
+    "price_in": 1.0,
+    "price_out": 5.0,
+    "subset": true,
+    "subset_of": 40,
+    "case_ids": [
+      "q009",
+      "q020",
+      "q022",
+      "q026",
+      "q027"
+    ]
+  },
+  "wall_clock_s": 71.9,
+  "summary": {
+    "accuracy": 0.8,
+    "false_compliant": 0,
+    "false_non_compliant": 0,
+    "over_escalation": 1,
+    "missed_escalation": 0,
+    "errors": 0,
+    "recall": {
+      "1": 0.7,
+      "3": 0.8,
+      "5": 1.0,
+      "8": 1.0
+    },
+    "mrr": 1.0,
+    "context_precision": 0.29000000000000004,
+    "by_difficulty": {
+      "easy": 1.0,
+      "hard": 0.6666666666666666
+    },
+    "escalation_codes": {
+      "always_review_category": 2,
+      "low_confidence": 1,
+      "insufficient_basis": 1
+    },
+    "confusion": {
+      "NON_COMPLIANT->NEEDS_REVIEW": 1,
+      "COMPLIANT->COMPLIANT": 2,
+      "NON_COMPLIANT->NON_COMPLIANT": 1,
+      "NEEDS_REVIEW->NEEDS_REVIEW": 1
+    }
+  },
+  "cases": [
+    {
+      "id": "q009",
+      "query": "Home finance on diminishing musharakah: the customer's undertaking is to buy our equity units back each year at the price we originally contributed for them. Legal says it keeps our return predictable. Can we document it that way?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS12-5.7"
+      ],
+      "difficulty": "hard",
+      "category": "equity_buyout_pricing",
+      "rationale": "SS12-5.7 expressly forbids stipulating that the equity share be acquired at original or face value, because that amounts to one partner guaranteeing the value of the other's equity.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS12-5.7",
+        "SS12-3.1.6.2",
+        "SS8-2.2.5",
+        "SS12-5.8",
+        "SS49-3.6"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS12-5.7",
+          "quote": "it is not permitted to stipulate that the equity share be acquired at their original or face value, as this would constitute a guarantee of the value of the equity shares of one partner (the Institution) by the other partner, which is prohibited by Shari'ah",
+          "supports": "Core prohibition matching the proposal's mechanism"
+        },
+        {
+          "chunk_id": "SS12-3.1.6.2",
+          "quote": "It is not permissible, however, to promise to buy the assets of the Sharikah on the basis of face value",
+          "supports": "Reinforces prohibition on fixed-price repurchase at original value"
+        },
+        {
+          "chunk_id": "SS8-2.2.5",
+          "quote": "it is permissible for one partner to promise to purchase the other's share in Musharakah at market price or at a price to be agreed upon at the time of sale",
+          "supports": "Permitted pricing mechanisms exclude predetermined original value"
+        },
+        {
+          "chunk_id": "SS12-5.8",
+          "quote": "The partners may arrange for the acquisition of the equity share of the Institution in a manner that serves the interests of both parties...the Institution's partner can purchase a particular number of these shares at certain intervals",
+          "supports": "Permits flexible acquisition arrangements, but within boundaries of permitted pricing"
+        }
+      ],
+      "escalations": [
+        "always_review_category"
+      ],
+      "escalation_details": [
+        {
+          "code": "always_review_category",
+          "detail": "the assessment itself identifies 'profit_guarantee', which is reserved to the ISSC regardless of how the request was worded"
+        }
+      ],
+      "concerns": [
+        "profit_guarantee",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal explicitly stipulates that the customer will buy the institution's equity units back at the price the institution originally contributed\u2014that is, at original or face value, held constant year to year. This mechanism is directly and repeatedly prohibited by the retrieved clauses.\n\nClause SS12-5.7 states unambiguously: 'it is not permitted to stipulate that the equity share be acquired at their original or face value, as this would constitute a guarantee of the value of the equity shares of one partner (the Institution) by the other partner, which is prohibited by Shari'ah.' The proposal's buyback at original contributed price is precisely this prohibited guarantee.\n\nClause SS12-3.1.6.2 reinforces the same rule: 'It is not permissible...to promise to buy the assets of the Sharikah on the basis of face value.' Again, the proposal's fixed repurchase price at original contribution is face value.\n\nClause SS8-2.2.5 permits a promise by one partner to purchase the other's share, but 'provided' the purchase is 'at market price or at a price to be agreed upon at the time of sale'\u2014not at a predetermined original price.\n\nClause SS12-5.8 permits creative arrangements for equity acquisition, including setting aside profit for repurchase, but does not override the prohibition on original-value pricing.\n\nThe stated rationale\u2014'to keep our return predictable'\u2014does not exempt the arrangement from the prohibition. The clauses treat original-value guarantees as inherently prohibited, not as permissible if risk-justified. Documenting the arrangement this way does not change its substance: it remains a prohibited guarantee of the institution's equity value.",
+      "tokens_in": 12203,
+      "tokens_out": 1890,
+      "elapsed_s": 21.4
+    },
+    {
+      "id": "q020",
+      "query": "Can we sign an istisna'a to deliver a completed warehouse to a client before we own anything at all, no land and no materials?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS11-2.1.1"
+      ],
+      "difficulty": "easy",
+      "category": "istisna_ownership",
+      "rationale": "SS11-2.1.1 expressly permits the Institution and the customer to conclude an istisna'a before the Institution assumes title to the subject-matter or the materials it will be produced from.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS11-2.1.1",
+        "SS11-7.2",
+        "SS31-5.5",
+        "SS31-5.6",
+        "SS37-3.2.5"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS11-2.1.1",
+          "quote": "It is permissible that the Institution and a customer conclude an Istisna'a contract before the Institution assumes title to the subject-matter to be sold to the customer or to the materials from which the subject-matter will be produced (manufactured or constructed).",
+          "supports": "Core permission to sign istisna'a without pre-existing ownership of materials or finished asset"
+        },
+        {
+          "chunk_id": "SS31-5.5",
+          "quote": "Gharar relating to sale of a non-owned commodity nullifies the sale contract. It refers to the case when the seller does not (personally) have the commodity at the time of signing the contract, and has to purchase it from the market. Salam and Istisna'a are exceptional cases here (subject to their respective conditions).",
+          "supports": "Istisna'a is an exception to the prohibition on selling non-owned commodities, provided its conditions are met"
+        },
+        {
+          "chunk_id": "SS37-3.2.5",
+          "quote": "In this case the institution assumes the commitment of manufacturing the equipment or the good, or constructing the buildings or the different types of capital assets according to the specifications agreed upon. The institution which provides finance in this manner has the right to sign a Parallel Istisna'a contract with another party to manufacture the asset in question.",
+          "supports": "Institution may commit to deliver a constructed asset and source it via parallel istisna'a, consistent with the proposal"
+        },
+        {
+          "chunk_id": "SS31-5.6",
+          "quote": "Selling a commodity that one does not own nullifies the sale contract.",
+          "supports": "General rule, but istisna'a is carved as an exception per SS31-5.5"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal seeks to enter an istisna'a contract to deliver a completed warehouse to a client before the institution owns land or materials. The AAOIFI standard explicitly permits this structure.\n\nClause SS11-2.1.1 directly authorizes the core arrangement: 'It is permissible that the Institution and a customer conclude an Istisna'a contract before the Institution assumes title to the subject-matter to be sold to the customer or to the materials from which the subject-matter will be produced.' This removes the ownership prerequisite entirely.\n\nThe concern that this violates gharar (excess uncertainty) is addressed by SS31-5.5, which recognizes istisna'a as an exception to the general prohibition on selling non-owned commodities: 'Salam and Istisna'a are exceptional cases here (subject to their respective conditions).' The clause SS31-5.6 reinforces that selling non-owned property normally nullifies a sale, but istisna'a operates as a carved-out exception.\n\nClause SS37-3.2.5 confirms the financing use case, stating the institution 'assumes the commitment of manufacturing the equipment or the good, or constructing the buildings' and may sign a parallel istisna'a with a builder to fulfill that commitment. This describes exactly the warehouse scenario: the institution commits to deliver, sources it via parallel contract, and retains the spread.\n\nNo clause in the retrieved set imposes a requirement that the institution must possess land or materials before signing. The standard instead frames istisna'a as a forward commitment structure in which the institution's obligation is to produce or source the specified asset, not to own raw inputs at contract inception.\n\nThe arrangement is compliant with the retrieved standards on its face.",
+      "tokens_in": 11897,
+      "tokens_out": 2056,
+      "elapsed_s": 22.3
+    },
+    {
+      "id": "q022",
+      "query": "Brokerage client wants to sell shares he doesn't hold and borrow them from the broker before settlement. Can we execute?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS12-4.1.2.7",
+        "SS21-3.15"
+      ],
+      "difficulty": "easy",
+      "category": "short_selling",
+      "rationale": "SS12-4.1.2.7 states it is not permitted to sell shares one does not own and that a broker's promise to lend them at delivery confers neither ownership nor possession, and SS21-3.15 separately bars renting shares to sell and return the like.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS12-4.1.2.7",
+        "SS12-3.6",
+        "SS21-3.15",
+        "SS21-3.16",
+        "SS21-3.5"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS12-4.1.2.7",
+          "quote": "It is not permitted for someone to sell shares that he does not own and the promise of a broker to lend the shares to him at the date of delivery does not constitute ownership or possession of the shares.",
+          "supports": "Core prohibition on selling unowned shares via broker loan"
+        },
+        {
+          "chunk_id": "SS12-3.6",
+          "quote": "It is not permissible to sell shares that the seller does not own (short sale), and the promise of a broker to lend these at the time of delivery is of no consequence.",
+          "supports": "Explicit rejection of broker-lending as cure for non-ownership in short sales"
+        },
+        {
+          "chunk_id": "SS21-3.15",
+          "quote": "It is not permissible to rent shares, whether this is for pledging them or for the purpose of selling the rented shares, and returning shares similar to them, as is done in the stock-markets",
+          "supports": "Prohibition on the rental-and-resale mechanism that comprises the proposed transaction"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal describes a short sale: the client wishes to sell shares he does not own, relying on the broker to lend the shares before settlement and the client to return them later. The retrieved clauses directly and unambiguously prohibit this transaction. SS12-4.1.2.7 states that 'it is not permitted for someone to sell shares that he does not own and the promise of a broker to lend the shares to him at the date of delivery does not constitute ownership or possession of the shares.' This language directly negates the core mechanism proposed\u2014that a broker's promise to lend shares could enable a sale. SS12-3.6 reinforces this with explicit reference to short sales, stating 'the promise of a broker to lend these at the time of delivery is of no consequence.' The standard is emphatic: the broker's promise does not cure the defect of non-ownership. Additionally, SS21-3.15 prohibits the rental (i'arah) of shares 'for the purpose of selling the rented shares, and returning shares similar to them, as is done in the stock-markets'\u2014which describes exactly the arrangement proposed. While SS21-3.16 permits lending shares by i'arah in certain circumstances, it explicitly limits the borrower's right to sell: 'The borrower does not have the right to sell the shares except for the execution of the terms of the mortgage,' which does not apply to a general short sale. The convergence of three separate standards, two with direct precedent language about broker-lending promises, leaves no room for a compliant execution of this proposal.",
+      "tokens_in": 10893,
+      "tokens_out": 1671,
+      "elapsed_s": 16.4
+    },
+    {
+      "id": "q026",
+      "query": "An unrelated corporate sponsor has volunteered, in a document entirely separate from the mudarabah agreement and without any fee, to make investors whole if the venture loses capital. He holds no shares in either party. Can we accept that undertaking?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS5-6.6",
+        "SS12-3.1.4.3"
+      ],
+      "difficulty": "hard",
+      "category": "third_party_guarantee",
+      "rationale": "SS5-6.6 permits a third party other than the Mudarib to volunteer to compensate investment losses provided the guarantee is not linked to the mudarabah contract, and the ownership and independence conditions in SS12-3.1.4.3 are all satisfied here.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS5-6.6",
+        "SS45-4.2.4",
+        "SS1-2.9.3",
+        "SS12-3.1.4.3",
+        "SS13-8.7"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS5-6.6",
+          "quote": "It is permissible for a third party, other than the Mudarib or investment agent or one of the partners, to undertake voluntarily that he will compensate the investment losses of the party to whom the undertaking is given, provided this guarantee is not linked in any manner to the Mudarabah financing contract or investment agency contract.",
+          "supports": "Core permissibility and the critical requirement that the guarantee be unlinked to the mudarabah contract"
+        },
+        {
+          "chunk_id": "SS12-3.1.4.3",
+          "quote": "A third party may provide a guarantee to make up a loss of capital of some or all partners. This guarantee is circumscribed with the conditions that (I) the legal capacity and financial liability of such a third party as a guarantor are independent from the Sharikah contract, (II) the guarantee should neither be provided for consideration nor linked in any manner to the Sharikah contract; (III) the third party guarantor should not own more than a half of the capital in the entity to be guaranteed, and (IV) the guaranteed entity should not own more than a half of the capital in the entity that undertakes to provide a guarantee.",
+          "supports": "Four structural conditions: the sponsor's independence, lack of consideration, separation from contract, and absence of cross-ownership exceeding 50 percent"
+        },
+        {
+          "chunk_id": "SS45-4.2.4",
+          "quote": "A voluntary undertaking by a third party acting in the public interest, such as the state, or relevant public interest authorities, such as a guardian, executor or father, to indemnify against a loss of capital without any right of recourse to the investment manager... In order for this undertaking to be valid, the third party should be administratively independent of the investment manager and there should be no direct or indirect ownership relationship of more than a half between the investment manager and the third party.",
+          "supports": "Administrative independence and ownership threshold requirements"
+        },
+        {
+          "chunk_id": "SS1-2.9.3",
+          "quote": "However, it is permissible for a third party to volunteer being a guarantor for that purpose, provided this guarantee is not stated in the contract.",
+          "supports": "Confirmation that separation of the guarantee from the contract documentation is required"
+        },
+        {
+          "chunk_id": "SS13-8.7",
+          "quote": "No profit can be recognised or claimed unless the capital of the Mudarabah is maintained intact. Whenever a Mudarabah operation incurs losses, such losses stand to be compensated by the profits of future operations of the Mudarabah... If losses are greater than profits at the time of liquidation, the balance (net loss) must be deducted from the capital. In this case, as he is a trustee the Mudarib is not liable for the amount of this loss, unless there is negligence or misconduct on his part.",
+          "supports": "The underlying mudarabah loss allocation principle; the third-party guarantee is ancillary and does not alter this framework"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal meets the permissibility conditions for third-party capital loss guarantees under mudarabah law as stated in the retrieved clauses. SS5-6.6 directly permits a third party to undertake voluntarily to compensate investment losses, provided the guarantee is not linked to the mudarabah contract itself. The proposal satisfies this requirement: the sponsor is unrelated, acts without fee, holds no equity stake, and the guarantee is documented separately from the mudarabah agreement\u2014meaning no contractual linkage exists. SS12-3.1.4.3, while addressing musharakah, articulates the same underlying framework and reinforces four key conditions: (I) the guarantor's legal capacity must be independent from the partnership contract, (II) the guarantee must not be for consideration and must be separate from the contract, (III) the guarantor cannot own more than half the capital, and (IV) the guaranteed entity cannot own more than half the guarantor's capital. The proposal satisfies all four. The guarantor is administratively and legally independent, provides no consideration, takes no ownership stake, and the venture has no ownership interest in the sponsor. SS1-2.3.1 adds that a third-party guarantee is permissible provided it is not stated in the contract; the proposal's separate documentation satisfies this too. SS45-4.2.4 confirms that third-party indemnification is valid when the third party is administratively independent and has no direct or indirect ownership relationship exceeding 50 percent with the investment manager\u2014again, satisfied here. SS13-8.7 establishes that mudarabah losses are typically borne by the capital provider and, absent negligence, the mudarib is not liable; the third-party guarantee is an optional protective layer that does not alter this allocation and thus does not violate mudarabah principles.",
+      "tokens_in": 12429,
+      "tokens_out": 2454,
+      "elapsed_s": 24.3
+    },
+    {
+      "id": "q027",
+      "query": "A group company has offered to cover any capital loss investors suffer in our musharakah. It's a related entity inside the same group. Can we rely on that undertaking?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS12-3.1.4.3",
+        "SS45-4.2.4"
+      ],
+      "difficulty": "hard",
+      "category": "third_party_guarantee",
+      "rationale": "SS12-3.1.4.3 makes the answer turn on facts the question does not supply, namely whether either entity owns more than half of the other and whether the guarantee is free of consideration and unlinked to the contract, and SS45-4.2.4 imposes the same independence test.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.62,
+      "retrieved": [
+        "SS12-3.1.4.3",
+        "SS12-3.1.4.1",
+        "SS12-3.1.4.2",
+        "SS45-4.2.4",
+        "SS12-3.1.5.4",
+        "SS12-5.7",
+        "SS5-6.6",
+        "SS12-4.1.1.2"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS12-3.1.4.1",
+          "quote": "no one is liable except in cases of misconduct, negligence or breach of contract. It is not permitted to stipulate that a partner in a Sharikah contract guarantees the capital of another partner.",
+          "supports": "prohibition of partner-to-partner capital guarantees; group entity status must be determined first"
+        },
+        {
+          "chunk_id": "SS12-3.1.4.3",
+          "quote": "the legal capacity and financial liability of such a third party as a guarantor are independent from the Sharikah contract, (II) the guarantee should neither be provided for consideration nor linked in any manner to the Sharikah contract; (III) the third party guarantor should not own more than a half of the capital in the entity to be guaranteed, and (IV) the guaranteed entity should not own more than a half of the capital in the entity that undertakes to provide a guarantee",
+          "supports": "conditions for third-party guarantees; independence and ownership thresholds apply but cannot be verified without disclosure of ownership structure"
+        },
+        {
+          "chunk_id": "SS12-3.1.5.4",
+          "quote": "It is a requirement that the proportions of losses borne by partners be commensurate with the proportions of their contributions to the Sharikah capital. It is not permitted, therefore, to agree on holding one partner or a group of partners liable for the entire loss or liable for a percentage of loss that does not match their share of ownership in the partnership.",
+          "supports": "foundational requirement that capital loss allocations track ownership; a guarantee covering all investor losses might conflict with this if structured to override proportionality"
+        },
+        {
+          "chunk_id": "SS5-6.6",
+          "quote": "It is permissible for a third party, other than the Mudarib or investment agent or one of the partners, to undertake voluntarily that he will compensate the investment losses of the party to whom the undertaking is given, provided this guarantee is not linked in any manner to the Mudarabah financing contract or investment agency contract.",
+          "supports": "permissibility of third-party loss compensation, conditional on non-linkage to the investment contract"
+        },
+        {
+          "chunk_id": "SS45-4.2.4",
+          "quote": "In order for this undertaking to be valid, the third party should be administratively independent of the investment manager and there should be no direct or indirect ownership relationship of more than a half between the investment manager and the third party.",
+          "supports": "parallel standard in capital protection context requiring administrative independence and capped ownership relationships"
+        }
+      ],
+      "escalations": [
+        "always_review_category",
+        "low_confidence",
+        "insufficient_basis"
+      ],
+      "escalation_details": [
+        {
+          "code": "always_review_category",
+          "detail": "the assessment itself identifies 'profit_guarantee', which is reserved to the ISSC regardless of how the request was worded"
+        },
+        {
+          "code": "low_confidence",
+          "detail": "model confidence 0.62 below the 0.70 threshold"
+        },
+        {
+          "code": "insufficient_basis",
+          "detail": "retrieved clauses do not settle the question"
+        }
+      ],
+      "concerns": [
+        "gharar",
+        "ownership_sequence",
+        "profit_guarantee"
+      ],
+      "reasoning": "The proposal presents a capital loss guarantee from a related group entity, which is neither a partner in the musharakah nor an external third party of the type contemplated by the standards. The retrieved clauses establish three distinct regimes: (1) internal partner guarantees are prohibited [SS12-3.1.4.1]; (2) third-party guarantees are permissible only if they meet specific structural independence conditions [SS12-3.1.4.3, SS5-6.6]; and (3) loss-sharing must be proportional to capital contribution, and partners cannot be held liable for losses exceeding their ownership share [SS12-3.1.5.4]. The group company sits in an ambiguous position. If it is a third party, clauses SS12-3.1.4.3 and SS45-4.2.4 require that (i) the guarantor not own more than half the capital of the guaranteed entity, and (ii) the guaranteed entity not own more than half the capital in the guarantor. These are structural tests\u2014they measure the independence and non-control relationship between the two entities. The retrieved text does not specify: (a) the ownership stakes between the group company and the proposed musharakah; (b) whether the group entity would be classified as legally independent for Shari'ah purposes despite common group ownership; or (c) whether the guarantee would be viewed as 'linked' to the musharakah contract by virtue of group affiliation. The clause on administrative independence [SS45-4.2.4] offers a conceptual parallel but is framed in the context of public authorities and does not directly address intra-group relationships. A finding of either compliance or non-compliance would require factual assumptions not present in the proposal or the retrieved standard text.",
+      "tokens_in": 23664,
+      "tokens_out": 3155,
+      "elapsed_s": 33.9
+    }
+  ]
+}

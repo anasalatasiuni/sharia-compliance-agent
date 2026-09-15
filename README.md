@@ -561,6 +561,11 @@ pytest -q          # 63 tests, no network
 ruff check .
 ```
 
+The eval runs the documentation quotes are committed under `eval/results/` —
+per-case verdicts, retrieved ids, citations and escalation codes — so the numbers
+in [`docs/PART2-technical-decisions.md`](docs/PART2-technical-decisions.md) §3 can
+be checked against the runs that produced them.
+
 `tests/test_guardrails.py` pins the safety properties — fabricated quotes caught,
 citations to unretrieved clauses caught, always-review categories escalating
 despite a clean draft, and the one-directional invariant stated directly as a

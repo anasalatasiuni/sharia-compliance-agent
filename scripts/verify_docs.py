@@ -94,7 +94,10 @@ def check_eval_figures(part2: str) -> None:
     """Numbers quoted from eval runs must match the saved results."""
     print("\n-- eval figures --")
     runs = []
-    for path in sorted(glob.glob(str(ROOT / "eval/results/*.json")), key=os.path.getmtime):
+    # Sorted by the timestamp in the filename, not mtime: a fresh clone stamps
+    # every file at checkout time, so mtime ordering is arbitrary there and
+    # "the last two runs" would pick arbitrary ones.
+    for path in sorted(glob.glob(str(ROOT / "eval/results/*.json"))):
         data = json.loads(pathlib.Path(path).read_text())
         if not data["config"].get("subset"):
             runs.append(data["summary"])

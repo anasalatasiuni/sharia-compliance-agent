@@ -1,0 +1,2156 @@
+{
+  "config": {
+    "model": "anthropic/claude-haiku-4.5",
+    "rerank_backend": "llm",
+    "rerank_model": "anthropic/claude-haiku-4.5",
+    "embed_model": "baai/bge-m3",
+    "corpus_version": "aaoifi-en-2017@145a0995711cf7ed",
+    "index_snapshot": "bff37e1f657b9ae3",
+    "prompt_version": "v1",
+    "rerank_top_k": 5,
+    "min_model_confidence": 0.7,
+    "min_rerank_score": 0.35,
+    "max_retrieval_rounds": 3,
+    "price_in": 1.0,
+    "price_out": 5.0
+  },
+  "wall_clock_s": 458.4,
+  "summary": {
+    "accuracy": 0.925,
+    "false_compliant": 0,
+    "false_non_compliant": 1,
+    "over_escalation": 2,
+    "missed_escalation": 1,
+    "errors": 0,
+    "recall": {
+      "1": 0.4954954954954955,
+      "3": 0.7567567567567568,
+      "5": 0.8108108108108109,
+      "8": 0.8378378378378378
+    },
+    "mrr": 0.8702702702702704,
+    "context_precision": 0.25936293436293434,
+    "by_difficulty": {
+      "easy": 0.9230769230769231,
+      "hard": 0.8461538461538461,
+      "medium": 1.0
+    },
+    "escalation_codes": {
+      "always_review_category": 3,
+      "low_confidence": 7,
+      "insufficient_basis": 7,
+      "unresolved_citation": 4,
+      "weak_retrieval": 3,
+      "schema_validation_failed": 3
+    },
+    "confusion": {
+      "NON_COMPLIANT->NON_COMPLIANT": 14,
+      "COMPLIANT->COMPLIANT": 12,
+      "NEEDS_REVIEW->NEEDS_REVIEW": 11,
+      "COMPLIANT->NEEDS_REVIEW": 2,
+      "NEEDS_REVIEW->NON_COMPLIANT": 1
+    }
+  },
+  "cases": [
+    {
+      "id": "q001",
+      "query": "Can Mal sell a vehicle to a customer under murabaha before buying it from the dealer?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS8-3.1.1",
+        "SS8-3.2.1"
+      ],
+      "difficulty": "easy",
+      "category": "ownership_sequence",
+      "rationale": "SS8-3.1.1 states the Institution shall not sell any item in a murabaha before it acquires it and takes actual or constructive possession.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS8-3.1.1",
+        "SS8-3.2.1",
+        "SS8-3.1.7",
+        "SS8-3.1.3",
+        "SS8-3.1.4"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-3.1.1",
+          "quote": "The Institution shall not sell any item in a Murabahah transaction before it acquires such item. Hence, it is not valid for the Institution to conclude a Murabahah sale with the customer before the Institution concludes a purchase contract with the supplier of the item the subject matter of the Murabahah and before it acquires actual or constructive possession of such items",
+          "supports": "core prohibition against pre-acquisition sale"
+        },
+        {
+          "chunk_id": "SS8-3.2.1",
+          "quote": "It is obligatory that the Institution's actual or constructive possession of the item be ascertained before its sale to the customer on the basis of Murabahah.",
+          "supports": "mandatory possession requirement prior to murabaha sale"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal asks whether Mal can sell a vehicle to a customer under murabaha before Mal has bought it from the dealer. The retrieved clauses directly prohibit this arrangement.\n\nClause SS8-3.1.1 establishes the foundational requirement: 'The Institution shall not sell any item in a Murabahah transaction before it acquires such item.' It further specifies that the Institution must 'conclude a purchase contract with the supplier of the item' and 'acquire actual or constructive possession of such items' before concluding the murabaha sale with the customer. This is reinforced by clause SS8-3.2.1, which states: 'It is obligatory that the Institution's actual or constructive possession of the item be ascertained before its sale to the customer on the basis of Murabahah.'\n\nThe retrieved clauses contemplate permissible variations (using an agent to acquire the asset, allowing undisclosed agency) but all such variations presuppose that acquisition by the Institution must occur before the murabaha sale to the customer. None of the clauses authorize selling before acquisition has taken place.\n\nThe proposal as stated\u2014selling before buying\u2014violates the mandatory sequence established in SS8-3.1.1 and SS8-3.2.1. The Institution must acquire title and possession (or constructive possession through supplier documents) from the dealer before it can validly enter into the murabaha sale with the customer.",
+      "tokens_in": 11455,
+      "tokens_out": 1597,
+      "elapsed_s": 17.8
+    },
+    {
+      "id": "q002",
+      "query": "Trade finance file: the supplier has released the bill of lading to us for a shipment of steel coil, but the cargo is still at sea and won't land for three weeks. Can we execute the murabaha with the customer now?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS8-3.2.4",
+        "SS8-3.2.1"
+      ],
+      "difficulty": "medium",
+      "category": "ownership_sequence",
+      "rationale": "SS8-3.2.4 treats receipt of a bill of lading as constructive possession, which satisfies the possession requirement in SS8-3.2.1 even though the goods have not physically arrived.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.87,
+      "retrieved": [
+        "SS8-3.2.4",
+        "SS8-3.1.1",
+        "SS8-3.2.1",
+        "SS8-3.2.3",
+        "SS8-3.1.4",
+        "SS14-3.5.1",
+        "SS1-2.6.5",
+        "SS17-5.2.15"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-3.2.4",
+          "quote": "The receipt of a bill of lading by the Institution or its agent, when purchasing goods on the international market, is considered as constructive possession.",
+          "supports": "Bill of lading satisfies the constructive possession requirement"
+        },
+        {
+          "chunk_id": "SS8-3.1.1",
+          "quote": "The Institution shall not sell any item in a Murabahah transaction before it acquires such item. Hence, it is not valid for the Institution to conclude a Murabahah sale with the customer before the Institution concludes a purchase contract with the supplier of the item the subject matter of the Murabahah and before it acquires actual or constructive possession of such items, which can be achieved when the supplier gives the Institution control over the item or the documents that represent possession thereof",
+          "supports": "Constructive possession via control of documents satisfies the pre-sale acquisition requirement"
+        },
+        {
+          "chunk_id": "SS8-3.2.1",
+          "quote": "It is obligatory that the Institution's actual or constructive possession of the item be ascertained before its sale to the customer on the basis of Murabahah.",
+          "supports": "Constructive possession is sufficient; not actual possession"
+        },
+        {
+          "chunk_id": "SS8-3.2.3",
+          "quote": "Taking possession may be actual in the case of the physical delivery or transportation to the acquirer or its agent, but may also take place constructively by placing of the item at the acquirer's disposal so as to enable him to deal with it at his will, even though no physical delivery has taken place.",
+          "supports": "Constructive possession does not require physical delivery; placement at disposal suffices"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal asks whether the bank (Institution) can execute a murabaha sale with the customer when the bank holds a bill of lading for cargo still at sea, but will not physically arrive for three weeks.\n\nThe applicable standard is AAOIFI SS No. 8 (Murabahah), which requires that the Institution acquire actual or constructive possession of the asset before concluding the murabaha sale with the customer. Clause 3/1/1 states this requirement explicitly: the Institution 'shall not sell any item in a Murabahah transaction before it acquires such item' and must have 'actual or constructive possession of such items, which can be achieved when the supplier gives the Institution control over the item or the documents that represent possession thereof.'\n\nThe critical question is whether receipt of a bill of lading constitutes constructive possession. Clause 3/2/4 directly addresses this: 'The receipt of a bill of lading by the Institution or its agent, when purchasing goods on the international market, is considered as constructive possession.' This is unambiguous and on-point.\n\nClause 3/2/1 confirms the requirement that 'the Institution's actual or constructive possession of the item be ascertained before its sale to the customer on the basis of Murabahah.'\n\nClause 3/2/3 provides the conceptual foundation for constructive possession: it can be achieved 'by placing of the item at the acquirer's disposal so as to enable him to deal with it at his will, even though no physical delivery has taken place.' A bill of lading represents precisely such placement\u2014the bank has control over the goods (evidenced by the document) and can direct their disposition, even though physical arrival is delayed.\n\nThe fact that the cargo is still at sea does not negate constructive possession acquired through the bill of lading. The standard distinguishes between constructive possession (which the bank has acquired) and physical delivery (which is delayed). Possession is the operative requirement; physical proximity is not.\n\nNo contradicting clauses are present in the retrieved set. The murabaha sale with the customer can proceed now.",
+      "tokens_in": 21960,
+      "tokens_out": 2630,
+      "elapsed_s": 26.5
+    },
+    {
+      "id": "q003",
+      "query": "The murabaha term sheet prices the mark-up at 3-month LIBOR plus 250bps, reset every quarter across the five-year tenor. Anything wrong with that?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS8-4.6"
+      ],
+      "difficulty": "hard",
+      "category": "profit_determination",
+      "rationale": "SS8-4.6 requires the price and profit to be fixed and known at signature and expressly forbids tying the profit to a future LIBOR rate.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS8-4.6",
+        "SS27-5.3",
+        "SS8-4.7",
+        "SS27-2.2",
+        "SS8-4.8"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-4.6",
+          "quote": "both the price of the item and the Institution's profit on the Murabahah transaction be fixed and known to both parties on the signature of the contract of sale. It is not permitted under any circumstances to subject the determination of the price or the profit to unknown variations or variations that are determinable in the future, such as by concluding the sale and making the profit dependent on the rate of LIBOR that will prevail in the future.",
+          "supports": "Core prohibition on LIBOR-linked profit in murabaha"
+        },
+        {
+          "chunk_id": "SS8-4.6",
+          "quote": "There is no objection to referring to any other known indicators during the promise stage as a comfort indicator to determine the rate of profit, provided that the determination of the Institution's profit at the time of concluding the Murabahah is based on a certain percentage of the cost and is not tied up with LIBOR or a time factor.",
+          "supports": "Permitted exception applies only when profit is not tied to LIBOR or time factor; proposal fails this test"
+        },
+        {
+          "chunk_id": "SS27-5.3",
+          "quote": "It is permissible to use an index like LIBOR, or a certain share/ commodity price index, as a basis for determining the profit of a Murabahah pledge, provided that the contract is to be concluded on a specific profit that does not vary with further changes in the index.",
+          "supports": "Index use permitted only if profit is specific and does not vary; quarterly resets violate this"
+        },
+        {
+          "chunk_id": "SS8-4.7",
+          "quote": "The Institution's profit mark-up in Murabahah must be known, and the mere mention of the total selling price is not sufficient.",
+          "supports": "Profit must be known; resetting profit does not satisfy this requirement"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "riba",
+        "gharar"
+      ],
+      "reasoning": "The proposal describes a murabaha transaction in which the Institution's profit is reset quarterly based on 3-month LIBOR plus 250bps over a five-year tenor. This structure violates the core requirement that the Institution's profit be 'fixed and known' at contract signature.\n\nClause SS8-4.6 is explicit: 'both the price of the item and the Institution's profit on the Murabahah transaction be fixed and known to both parties on the signature of the contract of sale.' The clause further states it is 'not permitted under any circumstances to subject the determination of the price or the profit to unknown variations or variations that are determinable in the future, such as by concluding the sale and making the profit dependent on the rate of LIBOR that will prevail in the future.'\n\nThe proposal's quarterly resets mean the profit is explicitly tied to LIBOR and determinable only in the future, which is precisely what SS8-4.6 forbids. The clause recognizes a narrow exception: indices may be used 'as a comfort indicator to determine the rate of profit' during the promise stage, provided 'the determination of the Institution's profit at the time of concluding the Murabahah is based on a certain percentage of the cost and is not tied up with LIBOR or a time factor.' The proposal does not meet this condition\u2014profit is tied to LIBOR and varies over time.\n\nClause SS27-5.3 confirms this interpretation, permitting index use only where 'the contract is to be concluded on a specific profit that does not vary with further changes in the index.' Quarterly resets by definition violate this requirement.\n\nClause SS8-4.7 underscores that the mark-up 'must be known' and determination must be 'completed by the agreement and mutual consent.' A reset schedule does not satisfy this requirement.\n\nThe arrangement is structurally incompatible with the Standards' requirement of profit certainty at contract inception.",
+      "tokens_in": 10963,
+      "tokens_out": 2082,
+      "elapsed_s": 23.4
+    },
+    {
+      "id": "q004",
+      "query": "At the promise stage we quote the client an indicative rate off the LIBOR curve, but the murabaha contract itself fixes the profit at a flat 6.2% of cost and never moves. Is referencing LIBOR that way a problem?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS27-5.3",
+        "SS8-4.6"
+      ],
+      "difficulty": "hard",
+      "category": "profit_determination",
+      "rationale": "SS27-5.3 permits using an index such as LIBOR as a basis for determining the profit of a murabaha pledge provided the contract is concluded on a specific profit that does not vary, which is exactly the carve-out SS8-4.6 allows.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS8-4.6",
+        "SS27-5.3",
+        "SS8-4.7",
+        "SS8-2.3.4",
+        "SS49-3.4"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-4.6",
+          "quote": "There is no objection to referring to any other known indicators during the promise stage as a comfort indicator to determine the rate of profit, provided that the determination of the Institution's profit at the time of concluding the Murabahah is based on a certain percentage of the cost and is not tied up with LIBOR or a time factor.",
+          "supports": "Core permission for the proposed structure: LIBOR reference at promise stage permitted; final contract profit must be fixed percentage of cost, not tied to LIBOR"
+        },
+        {
+          "chunk_id": "SS27-5.3",
+          "quote": "It is permissible to use an index like LIBOR, or a certain share/ commodity price index, as a basis for determining the profit of a Murabahah pledge, provided that the contract is to be concluded on a specific profit that does not vary with further changes in the index.",
+          "supports": "Reinforcement that LIBOR may be used as reference tool so long as final contract embeds a fixed, non-varying profit"
+        },
+        {
+          "chunk_id": "SS8-4.7",
+          "quote": "The Institution's profit mark-up in Murabahah must be known, and the mere mention of the total selling price is not sufficient. It is permissible that the profit be determined based on a lump sum amount or a certain percentage of the cost price only or of the cost price plus the expenses.",
+          "supports": "Profit must be known; 6.2% of cost satisfies this requirement as a fixed percentage"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal describes a murabaha structure where (1) LIBOR is referenced only at the promise stage as an indicative comfort indicator, and (2) the actual murabaha contract fixes the profit at a flat 6.2% of cost with no further variation. This structure aligns directly with the permissible approach described in the standards.\n\nSS8-4.6 explicitly permits referencing known indicators such as LIBOR during the promise stage, provided that 'the determination of the Institution's profit at the time of concluding the Murabahah is based on a certain percentage of the cost and is not tied up with LIBOR or a time factor.' The proposal satisfies this: the final contract profit is fixed at 6.2% of cost, severing any tie to LIBOR at contract execution.\n\nSS27-5.3 reinforces this permission, stating it is 'permissible to use an index like LIBOR... as a basis for determining the profit of a Murabahah pledge, provided that the contract is to be concluded on a specific profit that does not vary with further changes in the index.' Again, the proposal meets this condition\u2014the contract locks in a specific, non-varying profit percentage.\n\nSS8-4.7 confirms that the profit mark-up 'must be known' and 'may be determined based on... a certain percentage of the cost price only,' which the 6.2% flat rate satisfies.\n\nThe distinction between promise stage and contract execution is central. SS8-2.3.4 permits revision of promise terms by mutual consent before execution, and SS49-3.4 clarifies that a promise itself is not legally binding in the strict sense unless reliance causes loss. The use of LIBOR at the promise stage does not embed it into the binding contract itself.\n\nNo contradiction appears in the retrieved clauses. The proposal's structure respects the core requirement: LIBOR is a comfort reference only, while the final murabaha contract embodies a fixed, known profit divorced from any index or future variation.",
+      "tokens_in": 11409,
+      "tokens_out": 2087,
+      "elapsed_s": 22.7
+    },
+    {
+      "id": "q005",
+      "query": "Collections wants to apply a 2% per month late charge on overdue murabaha instalments and book it to fee income. Can we?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS3-2.1.2",
+        "SS8-5.8"
+      ],
+      "difficulty": "easy",
+      "category": "late_payment",
+      "rationale": "SS3-2.1.2 prohibits stipulating any financial compensation as a penalty for delay, and SS8-5.8 bars the Institution from imposing any additional payment for its own benefit on a defaulting customer.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS8-5.8",
+        "SS8-4.8",
+        "SS8-5.6",
+        "SS3-2.1.8",
+        "SS9-6.4"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-5.8",
+          "quote": "It is not permissible for the Institution to impose any additional payment on the customer for the Institution's benefit.",
+          "supports": "Core prohibition of additional payments for the bank's benefit on default"
+        },
+        {
+          "chunk_id": "SS8-4.8",
+          "quote": "It is not permitted subsequently to demand any extra payment either in consideration of extra time",
+          "supports": "Reinforcement that extra payments in relation to payment delay are forbidden"
+        },
+        {
+          "chunk_id": "SS8-5.6",
+          "quote": "It is permissible that the contract of Murabahah consists of an undertaking from the customer to pay an amount of money or a percentage of the debt, on the basis of undertaking to donate it in the event of a delay on his part in paying instalments on their due date. The Shari'ah Supervisory Board of the Institution must have full knowledge that any such amount is indeed spent on charitable causes, and not for the benefit of the Institution itself.",
+          "supports": "Permissible alternative requires charity spend, not institutional benefit"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "late_payment_penalty"
+      ],
+      "reasoning": "The proposal seeks to impose a 2% monthly late charge on overdue murabaha instalments and book it to fee income. This is directly prohibited by the retrieved standards. Clause [SS8-5.8] states explicitly: 'It is not permissible for the Institution to impose any additional payment on the customer for the Institution's benefit.' Clause [SS8-4.8] reinforces this: 'It is not permitted subsequently to demand any extra payment either in consideration of extra time.' Both clauses preclude additional charges levied for the bank's benefit when a customer defaults on or delays murabaha instalment payments. The 2% monthly charge, booked as fee income to the Institution, falls squarely within this prohibition because it is a payment demanded by the Institution for its own financial benefit arising from the customer's delay. The standards do offer a permissible alternative: [SS8-5.6] and [SS3-2.1.8] allow the bank to stipulate that the customer undertake to donate an amount or percentage of the debt to charitable causes in the event of payment delay, provided the Shari'ah Supervisory Board verifies the funds are spent on charity and 'not for the benefit of the Institution itself.' A late charge retained or booked as institutional fee income cannot satisfy that condition. The mechanism is clear: late charges for institutional benefit are forbidden in murabaha; only charity undertakings are permitted.",
+      "tokens_in": 10824,
+      "tokens_out": 1715,
+      "elapsed_s": 17.7
+    },
+    {
+      "id": "q006",
+      "query": "Alternative drafting on the same file: rather than a penalty, the customer undertakes to donate 2% of the overdue amount to charity, with our Shari'ah board verifying the money actually reaches charitable causes. Does that hold up?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS8-5.6",
+        "SS3-2.1.8"
+      ],
+      "difficulty": "medium",
+      "category": "late_payment",
+      "rationale": "SS8-5.6 permits an undertaking by the customer to donate an amount on late payment provided the Shari'ah Supervisory Board confirms it is spent on charity and not for the Institution's benefit.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS8-5.6",
+        "SS3-2.1.8",
+        "SS9-6.4",
+        "SS34-5.2.8",
+        "SS27-5.8"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-5.6",
+          "quote": "It is permissible that the contract of Murabahah consists of an undertaking from the customer to pay an amount of money or a percentage of the debt, on the basis of undertaking to donate it in the event of a delay on his part in paying instalments on their due date. The Shari'ah Supervisory Board of the Institution must have full knowledge that any such amount is indeed spent on charitable causes, and not for the benefit of the Institution itself.",
+          "supports": "Core permissibility and governance structure of the proposal"
+        },
+        {
+          "chunk_id": "SS3-2.1.8",
+          "quote": "It is permissible in contracts involving indebtedness (such as Murabahah) to stipulate an undertaking by the debtor, that in case of procrastinating in payment, the latter will donate an amount or a percentage of the debt to be spent for charitable causes through the Institution.",
+          "supports": "Confirmation that percentage-based charitable donation undertakings are permissible in debt contracts, with institutional coordination"
+        },
+        {
+          "chunk_id": "SS34-5.2.8",
+          "quote": "It is impermissible to make a condition which leads to any increment in the pay agreed upon, in case of default by the employer. Nevertheless, the contract may include a pledge by the employer to donate, in case of default, a percentage of the pay for charitable purposes. Such donation should entirely go to charitable purposes, under the supervision of the Shari'ah Board of the institution.",
+          "supports": "Principle that charitable donation undertakings (distinct from penalties) are permissible when supervised by the Shari'ah Board"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal describes a customer undertaking to donate 2% of an overdue amount to charity, with the institution's Shari'ah board verifying that funds reach charitable causes. This structure is directly and explicitly permissible under the retrieved standards.\n\nThe most directly applicable clause is SS8-5.6, which addresses exactly this mechanism in Murabahah contracts: an undertaking by the customer to donate a percentage of the debt in the event of payment delay, conditioned on the Shari'ah Supervisory Board verifying the amount is spent on charitable causes and not for the institution's benefit. The proposal satisfies both requirements: it specifies the 2% donation mechanism and commits to board verification.\n\nSS3-2.1.8 provides parallel support, confirming that in debt contracts (including Murabahah) a debtor may undertake to donate a percentage of the debt for charitable causes through the institution's coordination. The proposal's reference to board verification aligns with this requirement of institutional oversight.\n\nSS34-5.2.8 reinforces the principle: it distinguishes between prohibited increments to contractual sums and permitted charitable donations undertaken by the obligor, provided such donations go entirely to charitable purposes under supervision of the institution's Shari'ah Board.\n\nThe critical protective requirement\u2014that funds reach actual charitable causes and are not retained by or benefit the institution\u2014is built into the proposal's design and is mandated by all three primary clauses cited. No conflict exists among the retrieved standards on this point.",
+      "tokens_in": 11244,
+      "tokens_out": 1930,
+      "elapsed_s": 20.2
+    },
+    {
+      "id": "q007",
+      "query": "Customer can't meet the schedule and is asking for another twelve months. Can we extend the murabaha maturity if he pays us something extra for the extension?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS8-5.7"
+      ],
+      "difficulty": "easy",
+      "category": "debt_rescheduling",
+      "rationale": "SS8-5.7 states it is not permissible to extend the date of payment in exchange for an additional payment on rescheduling, whether the debtor is solvent or insolvent.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS8-4.8",
+        "SS8-5.7",
+        "SS11-4.1.3",
+        "SS1-2.6.5",
+        "SS8-2.3.4"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-4.8",
+          "quote": "It is not permitted subsequently to demand any extra payment either in consideration of extra time",
+          "supports": "The core prohibition: after the murabaha is executed and the debt obligation created, the bank cannot charge extra for granting extra time."
+        },
+        {
+          "chunk_id": "SS8-5.7",
+          "quote": "It is not permissible to extend the date of payment of the debt in exchange for an additional payment in case of rescheduling, irrespectively of whether the debtor is solvent or insolvent.",
+          "supports": "The rescheduling context: explicit ban on charging additional payment when deferring maturity, regardless of debtor solvency status."
+        },
+        {
+          "chunk_id": "SS8-2.3.4",
+          "quote": "It is permissible for the Institution and the customer, after the latter has given a promise but before the execution of the Murabahah, to agree to revise the terms of the promise whether with respect to the deferment of payment, the markup or other terms.",
+          "supports": "Why SS8-2.3.4 does not help here: revision of terms is allowed before execution only, not after the murabaha contract is already performed and the debt established."
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "late_payment_penalty",
+        "riba"
+      ],
+      "reasoning": "The proposal asks whether the bank may charge an additional payment in exchange for extending the murabaha maturity by twelve months. Two AAOIFI clauses directly prohibit this mechanism. Clause SS8-4.8 states that once the selling price becomes a debt at an agreed time, it is 'not permitted subsequently to demand any extra payment either in consideration of extra time.' Clause SS8-5.7 is explicit: 'It is not permissible to extend the date of payment of the debt in exchange for an additional payment in case of rescheduling, irrespectively of whether the debtor is solvent or insolvent.' The proposal contemplates a rescheduling (extension of the original maturity) coupled with an extra charge. Both clauses operate at the stage after the murabaha contract has been executed and the debt obligation is in place\u2014which is the situation described. The prohibition applies regardless of the debtor's financial circumstances. The retrieved clauses do not leave discretion for the bank to charge for time extension in this context; the standard is absolute. Clause SS8-2.3.4 permits revision of promise terms before execution, but that clause does not apply here because the murabaha has already been performed and the debt is outstanding. The charging of additional money for extension is the precise practice both clauses forbid.",
+      "tokens_in": 11268,
+      "tokens_out": 1880,
+      "elapsed_s": 20.3
+    },
+    {
+      "id": "q008",
+      "query": "A client has settled his murabaha two years ahead of schedule. We'd like to hand back a slice of the profit as a goodwill gesture. It was never promised in the contract. Is that OK?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS8-5.9"
+      ],
+      "difficulty": "medium",
+      "category": "early_settlement",
+      "rationale": "SS8-5.9 permits the Institution to give up part of the selling price on early payment provided it was not part of the contractual agreement.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS8-5.6",
+        "SS8-5.9",
+        "SS8-2.2.5",
+        "SS49-4.3",
+        "SS8-4.6"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-5.9",
+          "quote": "It is permissible for the Institution to give up part of the selling price if the customer pays early, provided this was not part of the contractual agreement.",
+          "supports": "Core permission for the proposed goodwill gesture"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal is to hand back a slice of the murabaha profit as a goodwill gesture after the customer has paid early, without this having been promised in the contract. AAOIFI SS No. 8, clause 5/9 directly addresses this scenario. It states that 'It is permissible for the Institution to give up part of the selling price if the customer pays early, provided this was not part of the contractual agreement.' The proposal satisfies both conditions: (1) the customer is paying early (two years ahead of schedule), and (2) the profit handback was not part of the contractual agreement (described as 'never promised in the contract'). The handback is therefore a post-contractual voluntary gesture by the institution, not a modification or breach of the murabaha terms. The arrangement does not engage concerns about fixed profit (SS8-4.6), since the original profit was fixed at contract signature and this reduction occurs only after performance. No binding promise or musharakah structure is implicated. The clause explicitly permits this conduct.",
+      "tokens_in": 11842,
+      "tokens_out": 1378,
+      "elapsed_s": 15.3
+    },
+    {
+      "id": "q009",
+      "query": "Home finance on diminishing musharakah: the customer's undertaking is to buy our equity units back each year at the price we originally contributed for them. Legal says it keeps our return predictable. Can we document it that way?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS12-5.7"
+      ],
+      "difficulty": "hard",
+      "category": "equity_buyout_pricing",
+      "rationale": "SS12-5.7 expressly forbids stipulating that the equity share be acquired at original or face value, because that amounts to one partner guaranteeing the value of the other's equity.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS12-5.7",
+        "SS12-3.1.6.2",
+        "SS8-2.2.5",
+        "SS49-3.6",
+        "SS12-5.8"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS12-5.7",
+          "quote": "it is not permitted to stipulate that the equity share be acquired at their original or face value, as this would constitute a guarantee of the value of the equity shares of one partner (the Institution) by the other partner, which is prohibited by Shari'ah",
+          "supports": "Core prohibition on fixed original-value buybacks"
+        },
+        {
+          "chunk_id": "SS12-3.1.6.2",
+          "quote": "It is not permissible, however, to promise to buy the assets of the Sharikah on the basis of face value",
+          "supports": "Reinforces the prohibition for diminishing musharakah structures"
+        },
+        {
+          "chunk_id": "SS8-2.2.5",
+          "quote": "it is permissible for one partner to promise to purchase the other's share in Musharakah at market price or at a price to be agreed upon at the time of sale",
+          "supports": "Permissible alternatives require pricing at market or agreed-upon rate, not original value"
+        },
+        {
+          "chunk_id": "SS49-3.6",
+          "quote": "the promise given by the client that he will buy units of the institution's share at stipulated intervals are legally binding",
+          "supports": "Confirms binding nature of buyback promises in diminishing musharakah"
+        },
+        {
+          "chunk_id": "SS12-5.8",
+          "quote": "The partners may arrange for the acquisition of the equity share of the Institution in a manner that serves the interests of both parties",
+          "supports": "Describes permissible acquisition structures but does not authorize face-value pricing"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "profit_guarantee",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal seeks to fix the buyback price at the bank's original contribution (face value). This mechanism directly violates the prohibition stated in SS12-5.7, which explicitly forbids stipulating that equity shares be acquired at their original or face value. The clause characterizes such an arrangement as 'a guarantee of the value of the equity shares of one partner (the Institution) by the other partner, which is prohibited by Shari'ah.' The bank's stated rationale\u2014that this keeps the return predictable\u2014does not change the Shari'ah requirement. SS12-3.1.6.2 reinforces this prohibition by stating it is 'not permissible...to promise to buy the assets of the Sharikah on the basis of face value.' SS8-2.2.5 further clarifies that while a promise to purchase the other partner's share is permissible, it must be 'at market price or at a price to be agreed upon at the time of sale'\u2014not at original value. SS49-3.6 confirms that promises in diminishing musharakah are binding, meaning the bank would be contractually locked into an impermissible valuation method. SS12-5.8 describes permissible acquisition arrangements (such as setting aside profit or purchasing at intervals), but does not alter the face-value prohibition. The proposal cannot be documented as described without violating these standards.",
+      "tokens_in": 12203,
+      "tokens_out": 2000,
+      "elapsed_s": 20.6
+    },
+    {
+      "id": "q010",
+      "query": "Same diminishing musharakah structure, but the customer's undertaking is to acquire our units at market value on each purchase date. Acceptable?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS12-5.7",
+        "SS12-5.8"
+      ],
+      "difficulty": "medium",
+      "category": "equity_buyout_pricing",
+      "rationale": "SS12-5.7 permits a binding promise by one partner to acquire the other's equity share gradually at market value or a price agreed at the time of acquisition.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS12-5.7",
+        "SS12-3.1.6.2",
+        "SS49-3.6",
+        "SS8-2.2.5",
+        "SS37-3.2.3"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS12-5.7",
+          "quote": "It is permissible for one of the partners to give a binding promise that entitles the other partner to acquire, on the basis of a sale contract, his equity share gradually, according to the market value or a price agreed at the time of acquisition.",
+          "supports": "Core permissibility of the proposed structure"
+        },
+        {
+          "chunk_id": "SS12-5.7",
+          "quote": "it is not permitted to stipulate that the equity share be acquired at their original or face value",
+          "supports": "Confirms that market value is the permissible alternative, excluding the prohibited face-value option"
+        },
+        {
+          "chunk_id": "SS12-3.1.6.2",
+          "quote": "It is permissible for a partner to issue a binding promise to buy, either within the period of operation or at the time of liquidation, all the assets of the Sharikah as per their market value or as per agreement at the date of buying.",
+          "supports": "Reinforces permissibility of market-value-based acquisition in partnership dissolution scenarios"
+        },
+        {
+          "chunk_id": "SS49-3.6",
+          "quote": "the promise given by the client that he will buy units of the institution's share at stipulated intervals are legally binding",
+          "supports": "Validates enforceability of the customer's binding undertaking to acquire the institution's units"
+        },
+        {
+          "chunk_id": "SS8-2.2.5",
+          "quote": "it is permissible for one partner to promise to purchase the other's share in Musharakah at market price or at a price to be agreed upon at the time of sale",
+          "supports": "Confirms market-price-based acquisition is the approved method for diminishing musharakah purchase promises"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal describes a diminishing musharakah arrangement where the customer commits to acquire the institution's units at market value on each purchase date. This structure is directly addressed and explicitly permitted by the retrieved standards.\n\nClause SS12-5.7 establishes the governing rule for diminishing musharakah: it is permissible for one partner to give a binding promise to acquire the other partner's equity share gradually 'according to the market value or a price agreed at the time of acquisition.' The clause specifically prohibits only one alternative\u2014acquisition 'at their original or face value'\u2014which would constitute an impermissible guarantee of the equity share's value.\n\nThe proposal specifies acquisition 'at market value,' which falls squarely within the permitted category. The clause explicitly sanctions this exact mechanism.\n\nThis finding is reinforced by SS12-3.1.6.2, which addresses the permissibility of a binding promise to buy partnership assets 'as per their market value or as per agreement at the date of buying,' again with the same prohibition on face value. The parallel language and identical restriction confirm that market-value-based acquisition is the compliant path.\n\nClause SS49-3.6 confirms that the customer's binding promise to buy units of the institution's share at stipulated intervals is legally binding in a diminishing musharakah context, validating the enforceability of the undertaking.\n\nClause SS8-2.2.5 reinforces the principle by approving the promise to purchase 'at market price or at a price to be agreed upon at the time of sale,' again excluding only the impermissible face-value alternative.\n\nThe proposal contains no element that triggers the prohibitions identified in the standards. The mechanism\u2014gradual acquisition by the customer of the institution's share at market value on specified dates\u2014is the canonical compliant structure for diminishing musharakah.",
+      "tokens_in": 11659,
+      "tokens_out": 1913,
+      "elapsed_s": 19.3
+    },
+    {
+      "id": "q011",
+      "query": "Corporate client is holding a 90-day bill of exchange and needs the cash now. Can we buy the paper off him at a discount to face?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS7-12.5.4",
+        "SS16-6.1"
+      ],
+      "difficulty": "easy",
+      "category": "debt_discounting",
+      "rationale": "SS7-12.5.4 treats discounting a bill of exchange before maturity as a form of riba, and SS16-6.1 states commercial papers may not be discounted.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS14-3.7.2",
+        "SS7-12.5.4",
+        "SS14-3.7.3",
+        "SS16-6.1",
+        "SS16-6.3"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS14-3.7.2",
+          "quote": "It is not permissible for the institution to discount accepted bills of exchange, i.e. to purchase these bills before maturity at less than their nominal value.",
+          "supports": "direct prohibition on the proposed transaction"
+        },
+        {
+          "chunk_id": "SS14-3.7.3",
+          "quote": "It is not permissible for the institution to trade in deferred payment documents or accepted bills of exchange, i.e. to purchase these instruments at less than their nominal value.",
+          "supports": "additional prohibition on trading in bills of exchange at discount"
+        },
+        {
+          "chunk_id": "SS7-12.5.4",
+          "quote": "It is not permissible to discount bills of exchange by transferring the ownership of their value, before their due date, to an Institution or others for a discounted immediate payment. This is because the transaction in this manner is a form of Riba.",
+          "supports": "Shari'ah rationale (Riba) and explicit naming of institutions as prohibited counterparties"
+        },
+        {
+          "chunk_id": "SS16-6.1",
+          "quote": "It is not permissible to discount commercial papers, but it is permitted to pay an amount that is less than the value of the paper to the first beneficiary prior to the date of maturity.",
+          "supports": "establishing that the standards distinguish between instruments; commercial papers permit below-face-value purchase, but this proposal involves a bill of exchange"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "riba",
+        "gharar"
+      ],
+      "reasoning": "The proposal asks whether Mal can purchase a 90-day bill of exchange at a discount to face value\u2014a classic discounting transaction. The retrieved clauses are explicit and unanimous in prohibition.\n\nThe operative instrument is a bill of exchange (not commercial paper per SS16). Three separate standards address this:\n\n1. **Direct prohibition on institutional discount:** SS14-3.7.2 states flatly that \"It is not permissible for the institution to discount accepted bills of exchange, i.e. to purchase these bills before maturity at less than their nominal value.\" This describes the proposed transaction exactly.\n\n2. **Trading prohibition:** SS14-3.7.3 reinforces that \"It is not permissible for the institution to trade in deferred payment documents or accepted bills of exchange, i.e. to purchase these instruments at less than their nominal value.\" It also blocks intermediation to facilitate such dealings, ruling out indirect workarounds.\n\n3. **Riba characterization:** SS7-12.5.4 explicitly identifies the mechanism: discounting bills of exchange by transferring ownership of value before maturity for immediate discounted payment \"is a form of Riba.\" This labels the economic substance, not merely a procedural restriction.\n\nSS16-6.1 carves out an exception for commercial papers (which *permits* buying below face value), but this proposal involves a bill of exchange, not commercial paper. SS16-6.1's permissive language does not apply here and actually underscores that the standards distinguish between instruments.\n\nThe proposal meets every element of the prohibitions: it is a bill of exchange, it is before maturity (90 days remaining), and it is at a discount to nominal value. No fact in the proposal suggests any exception.",
+      "tokens_in": 9872,
+      "tokens_out": 1867,
+      "elapsed_s": 16.9
+    },
+    {
+      "id": "q012",
+      "query": "Treasury wants a three-month forward to lock the USD/EGP rate on a payable. It is purely hedging, no speculation. Fine?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS1-2.2",
+        "SS1-2.3"
+      ],
+      "difficulty": "easy",
+      "category": "currency_forward",
+      "rationale": "SS1-2.2 prohibits forward currency contracts and SS1-2.3 closes the door specifically on dealing in the forward market even where the purpose is hedging.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS1-2.2",
+        "SS1-2.4.1",
+        "SS1-2.3",
+        "SS1-2.9.1",
+        "SS1-2.9.2",
+        "SS45-5.5",
+        "SS20-3.2.1",
+        "SS1-2.9.3"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS1-2.2",
+          "quote": "It is prohibited to enter into forward currency contracts.",
+          "supports": "categorical prohibition on the proposed instrument"
+        },
+        {
+          "chunk_id": "SS1-2.3",
+          "quote": "It is also prohibited to deal in the forward currency market even if the purpose is hedging to avoid a loss of profit on a particular transaction effected in a currency whose value is expected to decline.",
+          "supports": "hedging intent does not exempt from the forward contract prohibition"
+        },
+        {
+          "chunk_id": "SS1-2.9.1",
+          "quote": "A bilateral promise to purchase and sell currencies is forbidden if the promise is binding, even for the purpose of hedging against currency devaluation risk.",
+          "supports": "three-month forward constitutes a binding bilateral promise and is prohibited regardless of hedging intent"
+        },
+        {
+          "chunk_id": "SS1-2.4.1",
+          "quote": "To execute back to back interest free loans using different currencies without receiving or giving any extra benefit, provided these two loans are not contractually connected to each other.",
+          "supports": "the only identified permissible alternative for currency hedging operates on an entirely different contractual model"
+        },
+        {
+          "chunk_id": "SS45-5.5",
+          "quote": "Protecting the capital by use of conventional hedging contracts such as futures, options and swaps.",
+          "supports": "standard does not permit conventional hedging instruments for capital protection"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "gharar",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal requests a three-month forward currency contract to hedge a USD/EGP payable. The retrieved clauses from AAOIFI Standard No. 1 (Trading in Currencies) directly prohibit this arrangement on two independent grounds.\n\nFirst, clause SS1-2.2 establishes a categorical prohibition on forward currency contracts without exception based on structure or timing. Second, clause SS1-2.3 explicitly extends this prohibition to hedging transactions, foreclosing the argument that the purely defensive (non-speculative) intent of the hedge provides an exemption.\n\nThe proposal cannot be salvaged by recharacterizing it. Clause SS1-2.9.1 prohibits bilateral binding promises to exchange currencies even for hedging purposes. A standard three-month forward locks both parties into an obligation, meeting this definition.\n\nThe only permissible currency hedging mechanism identified in the retrieved clauses is the back-to-back interest-free loan structure described in SS1-2.4.1, which requires two contractually independent loans in different currencies with no extra benefit to either party. A forward contract does not operate on this model.\n\nClause SS45-5.5 mentions conventional hedging contracts (futures, options, swaps) but only in a negative framing\u2014as examples of methods that are not permissible for protecting capital. It does not create an exception.\n\nThe stated purpose (hedging, not speculation) does not change the analysis. The standard explicitly addresses and rejects this distinction in SS1-2.3.",
+      "tokens_in": 16707,
+      "tokens_out": 2841,
+      "elapsed_s": 31.8
+    },
+    {
+      "id": "q013",
+      "query": "Our equipment lease is drafted triple-net: the lessee carries all insurance and all maintenance including major overhauls, and we simply collect rent. Does that stand?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS9-5.1.7",
+        "SS9-5.1.8"
+      ],
+      "difficulty": "hard",
+      "category": "ijarah_maintenance",
+      "rationale": "SS9-5.1.7 bars the lessor from stipulating that the lessee undertake major maintenance, and SS9-5.1.8 requires insurance expense to be borne by the lessor even where the task is delegated to the lessee.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS9-5.1.7",
+        "SS9-5.1.8",
+        "SS9-5.2.4",
+        "SS54-11.2",
+        "SS9-5.1.5"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS9-5.1.7",
+          "quote": "The lessor may not stipulate that the lessee will undertake the major maintenance of the asset that is required to keep it in the condition necessary to provide the contractual benefits under the lease.",
+          "supports": "Major maintenance cannot be stipulated as lessee obligation; it may only be delegated at lessor's cost."
+        },
+        {
+          "chunk_id": "SS9-5.1.7",
+          "quote": "The lessee should carry out operating or periodical (ordinary) maintenance.",
+          "supports": "Only ordinary maintenance is properly a lessee obligation; major maintenance is excluded."
+        },
+        {
+          "chunk_id": "SS9-5.1.8",
+          "quote": "The leased asset is the responsibility of the lessor throughout the duration of the Ijarah, unless the lessee commits misconduct or negligence.",
+          "supports": "The lessor bears baseline responsibility for the asset; this cannot be shifted to the lessee by contract."
+        },
+        {
+          "chunk_id": "SS9-5.1.8",
+          "quote": "The lessor may take out permissible insurance on it whenever possible, and such insurance expenses must be borne by the lessor.",
+          "supports": "Insurance cost is the lessor's responsibility; it may not be charged to the lessee."
+        },
+        {
+          "chunk_id": "SS9-5.1.8",
+          "quote": "The lessor may also delegate to the lessee the task of taking out insurance at the lessor's expense.",
+          "supports": "The lessee may be delegated the administrative act of arranging insurance, but only at lessor's cost, not lessee's cost."
+        },
+        {
+          "chunk_id": "SS9-5.1.5",
+          "quote": "The lessor must accept responsibility for any defects of the leased asset which impair the intended use of the asset, and may not exclude his liability for any impairment that the leased asset may sustain.",
+          "supports": "The lessor's liability for the asset cannot be excluded; triple-net structure attempts exclusion."
+        },
+        {
+          "chunk_id": "SS9-5.2.4",
+          "quote": "It may be agreed that the rental should consist of two specified parts: one to be paid or transferred to the lessor and the other to be held by the lessee to cover any expenses or costs approved by the lessor, such as the cost of major maintenance, insurance, etc.",
+          "supports": "Permitted structure for lessee-paid expenses is a dedicated rental component, held by lessee and subject to lessor approval, not unilateral lessee cost-bearing."
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "riba",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal\u2014a triple-net lease in which the lessee bears all insurance and all maintenance including major overhauls\u2014violates multiple AAOIFI Shari'ah Standards on Ijarah. Under SS9-5.1.7, the lessor may not stipulate that the lessee undertake major maintenance; such work may only be delegated to the lessee at the lessor's cost. The proposal transfers both the duty and the cost to the lessee, which is prohibited. Under SS9-5.1.8, the leased asset remains the lessor's responsibility throughout the lease unless misconduct or negligence by the lessee occurs. Insurance expenses must be borne by the lessor; the lessor may delegate the administrative task of arranging insurance to the lessee only at the lessor's expense, not at the lessee's expense. The proposal shifts insurance cost to the lessee, violating this standard. SS9-5.1.5 reinforces that the lessor must accept responsibility for defects and impairment of the asset; a triple-net structure that places all maintenance and insurance burden on the lessee effectively transfers that responsibility. The only structure the standards permit for shared costs is outlined in SS9-5.2.4: a single rental divided into two parts, one paid to the lessor and the other held by the lessee to cover lessor-approved expenses (major maintenance, insurance, etc.), with any excess treated as an advance and any shortage borne by the lessor. The proposal as stated\u2014flat rent with all costs on the lessee\u2014does not conform to this mechanism.",
+      "tokens_in": 12027,
+      "tokens_out": 2412,
+      "elapsed_s": 25.1
+    },
+    {
+      "id": "q014",
+      "query": "Ijarah over a warehouse: year one rent is a fixed SAR 400,000, and from year two it resets annually against a published benchmark with a stated ceiling and floor. Is a floating rent structured like that allowed?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS9-5.2.3"
+      ],
+      "difficulty": "hard",
+      "category": "ijarah_rental_benchmark",
+      "rationale": "SS9-5.2.3 permits floating rentals provided the first period is a specified lump sum and later periods follow a clear benchmark subject to a maximum and minimum ceiling.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS9-5.2.3",
+        "SS27-5.4",
+        "SS33-6.1",
+        "SS9-3.4",
+        "SS33-6.2"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS9-5.2.3",
+          "quote": "In case the rental is subject to changes (floating rental), it is necessary that the amount of the rental of the first period of the Ijarah contract be specified in lump sum. It is then permissible that the rentals for subsequent periods be determined according to a certain benchmark. Such benchmark must be based on a clear formula which is not subject to dispute, because it becomes the determining factor for the rentals of the remaining periods. This benchmark should be subject to a ceiling, on both maximum and minimum levels.",
+          "supports": "The proposal's structure\u2014fixed first-year rent plus benchmark-linked floating rent with ceiling and floor\u2014is explicitly permitted under these conditions."
+        },
+        {
+          "chunk_id": "SS27-5.4",
+          "quote": "It is permissible to use the index to determine the portion of the variable Ujrah (rent) that represents the return.",
+          "supports": "The use of a published benchmark to set variable rent is permissible under this standard on indices."
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal describes a two-tier rental structure for warehouse ijarah: fixed SAR 400,000 in year one, then floating rent from year two onward pegged to a published benchmark with stated ceiling and floor. This structure directly matches the permissible model set out in SS9-5.2.3. The standard requires three elements for floating rent arrangements: (1) the first period rental must be specified in lump sum\u2014satisfied by the fixed SAR 400,000 in year one; (2) subsequent rentals must be determined by a clear formula not subject to dispute\u2014satisfied by the published benchmark with defined cap and floor; and (3) the benchmark must have both maximum and minimum ceiling levels\u2014explicitly stated in the proposal. The arrangement contains no element of gharar (ambiguity) because the benchmark is published and the adjustment formula is transparent. SS27-5.4 confirms that indices may permissibly determine the variable portion of ujrah (rent). The proposal does not involve subletting back to the owner (SS9-3.4 is not engaged) or waqf assets (SS33 clauses are not engaged). The structure meets all stated conditions in the controlling standard.",
+      "tokens_in": 12375,
+      "tokens_out": 1718,
+      "elapsed_s": 19.2
+    },
+    {
+      "id": "q015",
+      "query": "In our commodity murabaha for personal finance the customer signs a power of attorney appointing us to sell the metal on his behalf immediately after he buys it from us. It keeps the operation to a single visit. Any issue?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS30-4.7",
+        "SS30-4.9"
+      ],
+      "difficulty": "hard",
+      "category": "tawarruq",
+      "rationale": "SS30-4.7 states the client shall not delegate the Institution to sell on his behalf a commodity he bought from that same Institution, and SS30-4.9 requires him to sell it himself or through an agent other than the Institution.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS30-4.7",
+        "SS8-3.2.1",
+        "SS8-3.2.3",
+        "SS8-3.1.5",
+        "SS8-3.1.1",
+        "SS8-3.2.4",
+        "SS8-3.1.4",
+        "SS8-3.1.3"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS30-4.7",
+          "quote": "The client shall not delegate the Institution or its agent to sell, on his behalf, a commodity that he purchased from the same Institution and, similarly, the Institution shall not accept such delegation.",
+          "supports": "The core prohibition that the proposal violates"
+        },
+        {
+          "chunk_id": "SS30-4.7",
+          "quote": "If, however, the regulations do not permit the client to sell the commodity except through the same Institution, he may delegate the Institution to do so after he, actually or constructively, receives the commodity.",
+          "supports": "The narrow exception, which does not apply absent evidence of regulatory compulsion"
+        },
+        {
+          "chunk_id": "SS8-3.2.1",
+          "quote": "It is obligatory that the Institution's actual or constructive possession of the item be ascertained before its sale to the customer on the basis of Murabahah.",
+          "supports": "Confirms that constructive possession satisfies the murabahah requirement, but does not override the tawarruq delegation prohibition"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "waad_binding",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal explicitly violates the prohibition stated in SS30-4.7. The institution is asking the customer to sign a power of attorney to sell the metal immediately after purchase\u2014that is, to delegate the institution to sell a commodity the customer has just bought from the same institution. SS30-4.7 states: 'The client shall not delegate the Institution or its agent to sell, on his behalf, a commodity that he purchased from the same Institution and, similarly, the Institution shall not accept such delegation.' The standard does permit a narrow exception: 'If, however, the regulations do not permit the client to sell the commodity except through the same Institution, he may delegate the Institution to do so after he, actually or constructively, receives the commodity.' However, the proposal does not indicate that regulatory constraint exists, and the timing\u2014'immediately after'\u2014suggests the customer would not have meaningful possession or control of the metal before the delegation occurs. The clauses on murabahah possession (SS8-3.2.1, SS8-3.2.3) establish that constructive possession is sufficient, and the customer could receive it constructively; however, the prohibition in SS30-4.7 is categorical and does not depend on the degree of possession achieved. It depends on two things: (1) that the customer purchased from the same institution, and (2) that the customer delegates that institution to sell it. Both are present here. The exception pathway (regulatory compulsion) is not asserted in the proposal.",
+      "tokens_in": 29137,
+      "tokens_out": 3278,
+      "elapsed_s": 31.0
+    },
+    {
+      "id": "q016",
+      "query": "We're standing up tawarruq flows where the Bahrain entity buys the LME warrant, sells to the client, and our Malaysian subsidiary is the onward buyer. The metal never leaves the offshore warehouse. Can we go ahead?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS30-4.5",
+        "SS30-4.2"
+      ],
+      "difficulty": "hard",
+      "category": "cross_border_structuring",
+      "rationale": "SS30-4.5 requires the commodity to go to a genuine third party and not return by prior arrangement, and SS30-4.2 requires it to be identified and separated, neither of which can be settled from the description of a multi-entity cross-border arrangement without human review.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.65,
+      "retrieved": [
+        "SS30-4.5",
+        "SS30-4.7",
+        "SS30-4.9",
+        "SS30-4.8",
+        "SS30-4.6",
+        "SS30-4.2",
+        "SS30-3.1"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS30-4.5",
+          "quote": "The commodity (object of Monetization) must be sold to a party other than the one from whom it was purchased on deferred payment basis (third party)",
+          "supports": "requirement for distinct third-party buyer"
+        },
+        {
+          "chunk_id": "SS30-4.7",
+          "quote": "The client shall not delegate the Institution or its agent to sell, on his behalf, a commodity that he purchased from the same Institution",
+          "supports": "prohibition on client delegating Institution to resell"
+        },
+        {
+          "chunk_id": "SS30-4.8",
+          "quote": "The Institution should not arrange proxy of a third party to sell, on behalf of the client, the commodity that the client purchased from the Institution",
+          "supports": "prohibition on Institution arranging proxy sales"
+        },
+        {
+          "chunk_id": "SS30-4.9",
+          "quote": "The client shall not sell the commodity except by himself or through an agent other than the Institution",
+          "supports": "client must sell independently or via non-Institution agent"
+        },
+        {
+          "chunk_id": "SS30-4.2",
+          "quote": "The commodity sold shall be well identified so as to become distinct from the other assets of the seller",
+          "supports": "requirement for commodity segregation and identification"
+        },
+        {
+          "chunk_id": "SS30-4.6",
+          "quote": "The contract for purchasing the commodity on deferred payment basis, and the contract for selling it for a spot price shall not be linked together in such a way that the client looses his right to receive the commodity",
+          "supports": "prohibition on contract structures that deprive client of ownership rights"
+        }
+      ],
+      "escalations": [
+        "always_review_category",
+        "low_confidence",
+        "insufficient_basis"
+      ],
+      "escalation_details": [
+        {
+          "code": "always_review_category",
+          "detail": "cross-border or multi-jurisdiction structuring"
+        },
+        {
+          "code": "low_confidence",
+          "detail": "model confidence 0.65 below the 0.70 threshold"
+        },
+        {
+          "code": "insufficient_basis",
+          "detail": "retrieved clauses do not settle the question"
+        }
+      ],
+      "concerns": [
+        "ownership_sequence",
+        "gharar"
+      ],
+      "reasoning": "The proposal involves a three-party tawarruq chain: Bahrain entity buys LME warrant, sells to client, and Malaysian subsidiary is the onward buyer. The retrieved clauses impose strict requirements on tawarruq structures but leave critical facts undetermined about this arrangement.\n\nThe clauses clearly require that the commodity be sold to a third party distinct from the initial seller [SS30-4.5], which the Malaysian subsidiary appears to satisfy. However, three potential compliance gaps emerge that cannot be resolved from the text alone:\n\n1. **Delegation and agent role**: Clauses [SS30-4.7], [SS30-4.8], and [SS30-4.9] prohibit the Institution from arranging or accepting a proxy arrangement where it sells on behalf of the client, or where the client delegates the Institution to resell. The proposal does not specify whether the Malaysian subsidiary is acting as an independent agent, as the Bahrain entity's agent, as the client's agent, or as a principal in its own right. If the Malaysian subsidiary is acting as the Bahrain entity's arranged proxy to purchase on the client's behalf, this would violate [SS30-4.8]. If it is the client's delegated agent, this would implicate [SS30-4.7] and [SS30-4.9].\n\n2. **Commodity receipt and separation**: Clause [SS30-4.2] requires that the commodity be 'well identified' and 'distinct from the other assets of the seller' via separation or documented certificate numbers. The fact that 'the metal never leaves the offshore warehouse' raises doubt about whether the client actually receives or has constructive receipt of the warrant, and whether it is properly segregated at each step of the chain.\n\n3. **Contract linking**: Clause [SS30-4.6] prohibits linking the purchase contract (on deferred payment) and the resale contract in such a way that the client loses his right to receive the commodity. The proposal does not disclose the contract structure, so it is unclear whether the two legs are operationally or documentarily linked in a way that would deprive the client of effective ownership.\n\nThe proposed arrangement may be compliant if: (i) the Malaysian subsidiary is an independent principal acting on its own account, not an agent for either the Bahrain entity or the client; (ii) the client obtains actual or constructive receipt and rights over the warrant before the onward sale; and (iii) the purchase and sale contracts are not interdependent. However, the proposal does not confirm these facts.",
+      "tokens_in": 18166,
+      "tokens_out": 3090,
+      "elapsed_s": 32.6
+    },
+    {
+      "id": "q017",
+      "query": "Agri financing: we'd sign the salam for 500 tonnes of wheat now and pay the farmer the salam price in thirty days once credit committee releases the funds. Workable?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS10-3.1.3",
+        "SS10-3.1.4"
+      ],
+      "difficulty": "medium",
+      "category": "salam_capital",
+      "rationale": "SS10-3.1.3 requires the salam capital to be paid immediately at the place the contract is concluded, allowing at most a two or three day exception, so a thirty-day deferral turns the capital into a debt contrary to SS10-3.1.4.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS10-3.1.3",
+        "SS20-3.2.2.1",
+        "SS10-3.1.4",
+        "SS37-3.2.6",
+        "SS10-3.1.1",
+        "SS10-2.2",
+        "SS10-3.2.9",
+        "SS10-3.1.2"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS10-3.1.3",
+          "quote": "The capital in a Salam contract must be paid immediately at the place where the contract is concluded. However, as an exception to this ruling, payment may be delayed for two or three days",
+          "supports": "Core requirement that salam capital must be paid immediately; exception permits only two to three days delay"
+        },
+        {
+          "chunk_id": "SS20-3.2.2.1",
+          "quote": "That the commodity is a liability through description, while the price is deferred, irrespective of the contract being concluded with the word sale or with the word Salam. These contracts are not permitted, because they amount to a Salam contract in which the capital of Salam (Ras al-Mal) is not paid promptly.",
+          "supports": "Explicit prohibition of deferred-price structures in commodity contracts where commodity is liability through description"
+        },
+        {
+          "chunk_id": "SS10-3.1.4",
+          "quote": "It is not permitted that a debt be recognised as the capital of Salam, such as using as the capital of Salam loans or debts owed by the seller to the Institution as a result of previous transactions.",
+          "supports": "Prohibition on using debt or future obligations as salam capital"
+        },
+        {
+          "chunk_id": "SS10-3.1.1",
+          "quote": "It is permissible for the capital of Salam to be in the form of fungible goods (such as wheat and other cereals)",
+          "supports": "Confirms wheat is a permissible salam subject matter (not the defect in this proposal)"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "riba",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal describes a Salam contract for 500 tonnes of wheat in which the salam capital (price) would be paid thirty days after contract conclusion, contingent on credit committee approval. This arrangement violates a core requirement of Salam.\n\nUnder [SS10-3.1.3], the capital in a Salam contract must be paid immediately at the place where the contract is concluded. The standard permits only a narrow exception: delay of two or three days. A thirty-day deferral far exceeds this permitted window and is not authorized by the exception.\n\nMoreover, [SS20-3.2.2.1] explicitly addresses this scenario. It states that contracts in which the commodity is a liability through description while the price is deferred \"are not permitted, because they amount to a Salam contract in which the capital of Salam (Ras al-Mal) is not paid promptly.\" The proposal fits this prohibition exactly: wheat (commodity as liability through description) with a deferred price (thirty days pending credit committee release).\n\nAdditionally, [SS10-3.1.4] prohibits using debt as the capital of Salam. Pending approval for fund release suggests the bank does not yet possess the funds to pay; deferring payment for thirty days pending internal approval would likely constitute treating the bank's own future obligation as the salam capital, which is impermissible.\n\nThe substantive defect is the payment deferral, not the commodity type (wheat is permissible per [SS10-3.1.1]) or the contract form.",
+      "tokens_in": 25381,
+      "tokens_out": 3253,
+      "elapsed_s": 32.0
+    },
+    {
+      "id": "q018",
+      "query": "We're the buyer under a salam for barley. Can we sign a second, separate salam as seller to a miller on the same specification, so long as neither contract is conditional on the other?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS10-6.2",
+        "SS10-6.3"
+      ],
+      "difficulty": "medium",
+      "category": "parallel_salam",
+      "rationale": "SS10-6.2 permits the buyer in the first salam to conclude a parallel salam as seller, and SS10-6.3 makes it valid precisely on the condition that the obligations and rights of the two contracts stand alone.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS10-6.2",
+        "SS10-6.3",
+        "SS25-2.2.3",
+        "SS37-3.2.6",
+        "SS10-6.1"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS10-6.2",
+          "quote": "It is permissible for the buyer to conclude a separate parallel Salam with a third party for the purpose of selling, on the basis of Salam, a commodity whose description corresponds to the description of the commodity to be acquired through the first Salam contract. In this situation, the buyer in the first Salam contract becomes the seller in the second Salam contract.",
+          "supports": "Core permissibility of the proposed structure"
+        },
+        {
+          "chunk_id": "SS10-6.3",
+          "quote": "it is not permissible for the parties to link the obligations under the two Salam contracts together so that the execution of the obligations of one contract is contingent on the outcome of the other. Hence, it is necessary that both the obligations and the rights under the two contracts stand alone in all respects.",
+          "supports": "Compliance mechanism: the proposal's stipulation that contracts are unconditional satisfies the independence requirement"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal describes a parallel salam structure explicitly contemplated and permitted by the standards. The buyer in the first salam (who will receive barley) seeks to become the seller in a second salam to the miller, offering barley of matching specification. This matches the arrangement described in clause SS10-6.2, which permits exactly this role reversal. The proposal explicitly states neither contract will be conditional on the other, which directly satisfies the independence requirement in clause SS10-6.3. Under that clause, the two contracts must stand alone in all respects and their obligations cannot be linked. The buyer has ensured compliance by structuring them as separate, unconditional agreements. The standards do not require any other formality for parallel salam beyond the descriptive match and independence of obligations, both of which are met here.",
+      "tokens_in": 11300,
+      "tokens_out": 1555,
+      "elapsed_s": 17.4
+    },
+    {
+      "id": "q019",
+      "query": "Client owns machinery and needs liquidity. Can he sell it to us for cash and then buy the same machinery back from us on deferred murabaha?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS8-2.2.3",
+        "SS49-3.3"
+      ],
+      "difficulty": "easy",
+      "category": "inah",
+      "rationale": "SS8-2.2.3 requires the seller to be a third party and expressly bars a customer selling the item to the Institution and repurchasing it on murabaha, and SS49-3.3 prohibits any promise producing such an 'inah repurchase.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS30-4.5",
+        "SS49-3.3",
+        "SS30-4.7",
+        "SS40-4.2.3",
+        "SS8-2.2.3"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS49-3.3",
+          "quote": "Any promise in a sale contract made by the buyer or the seller that results in a repurchase contract ('Inah) is prohibited by the Shari'ah, whether the promise is part of the sale contract or is given prior or subsequent to it",
+          "supports": "The proposed transaction is an implicit repurchase agreement, prohibited as 'Inah"
+        },
+        {
+          "chunk_id": "SS30-4.5",
+          "quote": "the commodity (object of Monetization) must be sold to a party other than the one from whom it was purchased on deferred payment basis (third party), so as to avoid 'Inah which is strictly prohibited. Moreover, the commodity shall not return back to the seller by virtue of prior agreement or collusion between the two parties",
+          "supports": "The machinery returns to the original owner (client) through a pre-arranged sequence with the same counterparty (bank), violating the third-party requirement"
+        },
+        {
+          "chunk_id": "SS8-2.2.3",
+          "quote": "it is not permitted for a customer to sell an ordered item to the Institution and then repurchase it through a Murabahah transaction",
+          "supports": "The proposal directly matches the prohibited pattern: customer sells machinery to the institution, then repurchases via murabaha"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "riba",
+        "maysir",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal describes a structure in which the client sells machinery to the bank for cash, then immediately purchases the same machinery back on deferred murabaha. This arrangement triggers two distinct Shari'ah prohibitions established in the retrieved clauses.\n\nFirst, the structure violates the 'Inah prohibition. Under SS49-3.3, a promise or agreement that results in a repurchase contract is prohibited, whether explicit or implicit. The proposal's sequence\u2014spot sale followed by deferred repurchase of the identical asset\u2014matches the prohibited pattern. SS30-4.5 reinforces this by requiring that in monetization structures, the commodity must be sold to a third party and must not return to the original seller by virtue of prior agreement or collusion. Here, the machinery returns to the client through a pre-planned sequence with the same counterparty (the bank), which constitutes prohibited 'Inah.\n\nSecond, SS8-2.2.3 explicitly prohibits murabaha where the customer sells an ordered item to the institution and then repurchases it through a murabaha transaction. Although this clause addresses a slightly different sequence (customer sells first, then buys murabaha), the principle is identical: the same party cannot sell and then rebuy the same asset from the institution. The clause states: \"it is not permitted for a customer to sell an ordered item to the Institution and then repurchase it through a Murabahah transaction.\" The proposed transaction matches this prohibited structure.\n\nThe client's need for liquidity cannot override the Shari'ah structural prohibition. Alternative structures (such as a true monetization with a genuine third party, or an asset-backed facility not structured as 'Inah) may be available, but this specific proposal does not comply with the retrieved standards.",
+      "tokens_in": 11364,
+      "tokens_out": 2096,
+      "elapsed_s": 23.4
+    },
+    {
+      "id": "q020",
+      "query": "Can we sign an istisna'a to deliver a completed warehouse to a client before we own anything at all, no land and no materials?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS11-2.1.1"
+      ],
+      "difficulty": "easy",
+      "category": "istisna_ownership",
+      "rationale": "SS11-2.1.1 expressly permits the Institution and the customer to conclude an istisna'a before the Institution assumes title to the subject-matter or the materials it will be produced from.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS11-2.1.1",
+        "SS31-5.5",
+        "SS34-5.1.5",
+        "SS11-3.1.3",
+        "SS8-3.1.1"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS11-2.1.1",
+          "quote": "It is permissible that the Institution and a customer conclude an Istisna'a contract before the Institution assumes title to the subject-matter to be sold to the customer or to the materials from which the subject-matter will be produced (manufactured or constructed).",
+          "supports": "direct authorization for the proposed transaction"
+        },
+        {
+          "chunk_id": "SS31-5.5",
+          "quote": "Gharar relating to sale of a non-owned commodity nullifies the sale contract... Salam and Istisna'a are exceptional cases here (subject to their respective conditions).",
+          "supports": "confirmation that istisna'a is an exception to the prohibition on selling non-owned commodities"
+        },
+        {
+          "chunk_id": "SS11-3.1.3",
+          "quote": "It is not permissible that the subject-matter of an Istisna'a contract be an existing and identified capital asset... Istisna'a is a sale contract applicable to items that are identified by specification, not by designation.",
+          "supports": "reinforces that istisna'a operates on items not yet in the institution's possession during contracting"
+        }
+      ],
+      "escalations": [
+        "unresolved_citation",
+        "unresolved_citation"
+      ],
+      "escalation_details": [
+        {
+          "code": "unresolved_citation",
+          "detail": "quote alters the force of SS31-5.5 \u2014 replace of ['not']: quote says 'their respective conditions', clause says 'the case when the seller does not personally have the commodity at the time of signing the contract'"
+        },
+        {
+          "code": "unresolved_citation",
+          "detail": "quote alters the force of SS11-3.1.3 \u2014 insert of ['invalid']: quote says '(nothing)', clause says 'for example it is invalid for the institution to conclude a contract to sell a particular designated car or factory on the basis of istisna a this is because'"
+        }
+      ],
+      "concerns": [],
+      "reasoning": "The proposal asks whether an istisna'a contract can be signed before the institution owns land, materials, or anything else related to the warehouse. AAOIFI SS 11, clause 2/1/1 directly permits this arrangement. It states that 'It is permissible that the Institution and a customer conclude an Istisna'a contract before the Institution assumes title to the subject-matter to be sold to the customer or to the materials from which the subject-matter will be produced.' This explicit permission covers the exact scenario: signing the contract while owning neither the land nor the materials.\n\nThe concern about selling non-owned commodities is addressed by SS 31, clause 5/5, which confirms that gharar (uncertainty) relating to sale of non-owned commodities does nullify contracts\u2014however, it provides that 'Salam and Istisna'a are exceptional cases here (subject to their respective conditions).' This confirms that istisna'a operates as an exception to the general prohibition on selling what one does not own.\n\nSS 11, clause 3/1/3 reinforces the structure: istisna'a applies to items 'identified by specification, not by designation,' and importantly notes that the purchaser has no prior ownership rights over materials 'while they are still in the process of being produced and have not yet been delivered.' This is consistent with the institution entering the contract without yet owning materials.\n\nThe Murabahah standard (SS 8, clause 3/1/1) is distinguishable and inapplicable here: it requires that the institution acquire the item before sale, but that requirement applies specifically to Murabahah, not istisna'a. Istisna'a has its own rules, which expressly permit pre-ownership contracting.\n\nThe proposal, as stated, satisfies the permissible scope of istisna'a contracting.",
+      "tokens_in": 12029,
+      "tokens_out": 1970,
+      "elapsed_s": 20.5
+    },
+    {
+      "id": "q021",
+      "query": "The istisna'a contract carries a liquidated damages clause under which the contractor pays us an agreed sum for every week handover slips. Is that enforceable from a Shari'ah angle?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS11-6.6",
+        "SS3-2.3"
+      ],
+      "difficulty": "medium",
+      "category": "penalty_clause",
+      "rationale": "SS11-6.6 permits a fair penalty clause compensating the ultimate purchaser for the manufacturer's late delivery where the delay is not caused by force majeure, and SS3-2.3 confirms penalty clauses are permitted in istisna'a and construction contracts.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.85,
+      "retrieved": [
+        "SS11-6.6",
+        "SS11-4.2.3",
+        "SS8-2.5.4",
+        "SS8-4.2",
+        "SS11-4.2.4",
+        "SS11-6.2",
+        "SS11-3.2.4",
+        "SS11-2.2.4"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS11-6.6",
+          "quote": "It is permissible for the contract of Istisna'a to include a fair penalty clause stipulating an agreed amount of money for compensating the ultimate purchaser adequately if the manufacturer is late in delivering the subject-matter. Such compensation is permissible only if the delay is not caused by intervening contingencies (force majeure).",
+          "supports": "Core permissibility of liquidated damages for contractor delay in istisna'a"
+        },
+        {
+          "chunk_id": "SS11-6.6",
+          "quote": "it is not permitted to stipulate a penalty clause against the ultimate purchaser for default on payment",
+          "supports": "Confirms that penalty on purchaser is prohibited, but does not restrict penalty on contractor"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal seeks to enforce a liquidated damages clause in an istisna'a contract under which the contractor pays an agreed sum for each week of handover delay. Clause SS11-6.6 directly addresses this scenario. It states that 'It is permissible for the contract of Istisna'a to include a fair penalty clause stipulating an agreed amount of money for compensating the ultimate purchaser adequately if the manufacturer is late in delivering the subject-matter.' The clause further provides that 'Such compensation is permissible only if the delay is not caused by intervening contingencies (force majeure).' The proposed liquidated damages clause fits within this framework: it is an agreed-upon sum payable by the contractor (the manufacturer/supplier) to the purchaser (the bank, as ultimate purchaser) for late delivery. The language 'fair penalty clause' and 'agreed amount' aligns with the structure of liquidated damages. The standard makes clear this is permissible provided the delay is not caused by force majeure. From a Shari'ah perspective, this compensates actual harm to the purchaser from delay\u2014lost opportunity, temporary financing, or other consequential costs\u2014without constituting riba, gharar, or maysir. The clause does not impose penalty on the purchaser for payment default, which is explicitly prohibited in SS11-6.6. Confidence is not higher because the proposal does not specify whether the liquidated damages amount is 'fair' in the sense of reasonably approximating actual harm, which is a condition of permissibility under the standard. A reviewer will need to assess whether the agreed sum is proportionate to plausible delay costs.",
+      "tokens_in": 31209,
+      "tokens_out": 3179,
+      "elapsed_s": 29.1
+    },
+    {
+      "id": "q022",
+      "query": "Brokerage client wants to sell shares he doesn't hold and borrow them from the broker before settlement. Can we execute?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS12-4.1.2.7",
+        "SS21-3.15"
+      ],
+      "difficulty": "easy",
+      "category": "short_selling",
+      "rationale": "SS12-4.1.2.7 states it is not permitted to sell shares one does not own and that a broker's promise to lend them at delivery confers neither ownership nor possession, and SS21-3.15 separately bars renting shares to sell and return the like.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS12-4.1.2.7",
+        "SS12-3.6",
+        "SS21-3.16",
+        "SS21-3.15",
+        "SS21-3.5"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS12-4.1.2.7",
+          "quote": "It is not permitted for someone to sell shares that he does not own and the promise of a broker to lend the shares to him at the date of delivery does not constitute ownership or possession of the shares.",
+          "supports": "Direct prohibition of the short-sale mechanism proposed"
+        },
+        {
+          "chunk_id": "SS12-3.6",
+          "quote": "It is not permissible to sell shares that the seller does not own (short sale), and the promise of a broker to lend these at the time of delivery is of no consequence.",
+          "supports": "Restatement of prohibition; explicitly negates broker lending promise as a workaround"
+        },
+        {
+          "chunk_id": "SS21-3.15",
+          "quote": "It is not permissible to rent shares, whether this is for pledging them or for the purpose of selling the rented shares, and returning shares similar to them, as is done in the stock-markets",
+          "supports": "Prohibition of share lending for resale, which is the functional equivalent of the proposed short sale"
+        },
+        {
+          "chunk_id": "SS21-3.16",
+          "quote": "The borrower does not have the right to sell the shares except for the execution of the terms of the mortgage.",
+          "supports": "Restriction on sale of borrowed shares; proposed sale for normal market transaction falls outside permitted purposes"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "maysir",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal describes a short sale: the client wishes to sell shares he does not own, with the broker lending them before settlement. The retrieved clauses directly and repeatedly prohibit this arrangement. SS12-4.1.2.7 and SS12-3.6 both explicitly state that it is not permitted to sell shares one does not own, and critically, that 'the promise of a broker to lend the shares to him at the date of delivery does not constitute ownership or possession of the shares.' This directly addresses the mechanism proposed\u2014the broker's promise to lend is not a substitute for the seller's ownership. SS12-4.1.2.7 adds a further concern: if the broker stipulates that the seller must pay the price of the shares and the broker then earns interest on that deposit, the arrangement compounds the violation by incorporating a riba-linked element. SS21-3.15 reinforces the prohibition by stating it is 'not permissible to rent shares...for the purpose of selling the rented shares, and returning shares similar to them, as is done in the stock-markets'\u2014which describes exactly the short-sale mechanism. SS21-3.16 permits lending shares (I'arah) only for pledging or profit purposes, and explicitly restricts the borrower's right to sell: 'The borrower does not have the right to sell the shares except for the execution of the terms of the mortgage.' Since the proposal involves the client (borrower) selling the borrowed shares on the open market, not for mortgage execution, this clause also bars the arrangement. The clauses are consistent and unambiguous: execution of this proposal would violate Shari'ah standards.",
+      "tokens_in": 10893,
+      "tokens_out": 1879,
+      "elapsed_s": 17.7
+    },
+    {
+      "id": "q023",
+      "query": "The murabaha agreement lets us debit any account the customer holds with us if an instalment goes unpaid. Finance wants to apply it on a delinquent file. Same currency both sides. Is that within the rules?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS3-2.5.3"
+      ],
+      "difficulty": "medium",
+      "category": "set_off",
+      "rationale": "SS3-2.5.3 permits the Institution to stipulate in an indebtedness contract that it may recoup the amount due from any of the customer's accounts without further consent where the balance is in the same currency as the debt.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.88,
+      "retrieved": [
+        "SS3-2.5.3",
+        "SS8-5.1",
+        "SS8-4.3",
+        "SS3-2.1.8",
+        "SS8-4.8"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS3-2.5.3",
+          "quote": "It is permissible for the Institution to stipulate in a contract dealing with indebtedness that, if the debtor is late in making payment, the Institution is entitled to recoup the amount due from any of the accounts of the customer with the Institution, whether current accounts or investment accounts. This may be done without getting any further consent of the debtor provided the balance in the account is of the same currency as that of the debt.",
+          "supports": "Core permissibility of debiting customer accounts to recover unpaid debt in the same currency."
+        },
+        {
+          "chunk_id": "SS8-5.1",
+          "quote": "It is permissible for the Institution to stipulate to the customer that instalments may become due before their originally agreed due dates in case of the customer's refusal or delay in paying any instalment without any valid reason after the lapse of the time specified in the notice to be sent by the Institution to the customer within a reasonable period of time following the due date.",
+          "supports": "Confirms that murabaha contracts may include enforcement stipulations upon customer delay, supporting the collection framework."
+        },
+        {
+          "chunk_id": "SS8-4.8",
+          "quote": "It is permissible to agree on the payment of the price of the item under Murabahah either by short or long term instalments, and the selling price of the asset becomes a debt that the customer is obligated to pay at the time agreed upon.",
+          "supports": "Establishes that murabaha selling price is a debt obligation payable on agreed schedule, forming the basis for enforcement rights."
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal seeks to debit any account the customer holds to recover unpaid murabaha instalments, in the same currency as the debt. Clause [SS3-2.5.3] explicitly permits this mechanism: an institution may stipulate in an indebtedness contract the right to recoup amounts due from any of the customer's accounts without further consent, provided the balance is in the same currency as the debt. The proposal satisfies both conditions. Clause [SS8-5.1] separately confirms that murabaha contracts may include a stipulation allowing instalments to become due early upon customer delay, which is a related mechanism supporting enforcement flexibility. Clause [SS8-4.8] establishes that the selling price becomes a debt payable at agreed times, confirming the murabaha instalment obligation. No clause prohibits account debiting as a collection method. The same-currency requirement stated in the proposal aligns precisely with the permissibility condition in [SS3-2.5.3]. The confidence is high because the operative rule is explicit and directly on point; it is not 0.95+ only because the clauses do not address whether procedural steps (e.g., notice before debit) beyond the standards themselves may be required by the contract terms, local law, or bank policy.",
+      "tokens_in": 11224,
+      "tokens_out": 1858,
+      "elapsed_s": 19.6
+    },
+    {
+      "id": "q024",
+      "query": "Screening a listed logistics name for the fund. Core business is clean. Interest-bearing borrowings sit at 22% of market cap, interest-bearing deposits at 8%, and 1.5% of income comes from a conventional finance associate. Can we hold it if we purify that 1.5%?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS21-3.4.2",
+        "SS21-3.4.3",
+        "SS21-3.4.4"
+      ],
+      "difficulty": "hard",
+      "category": "equity_screening",
+      "rationale": "SS21-3.4.2 caps interest-based borrowing at 30% of market capitalisation, SS21-3.4.3 caps interest-taking deposits at 30%, and SS21-3.4.4 caps prohibited income at 5%, all of which this name clears subject to eliminating the prohibited portion.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.82,
+      "retrieved": [
+        "SS21-3.4.4",
+        "SS21-3.4.3",
+        "SS21-3.4.2",
+        "SS21-3.4.6",
+        "SS21-3.4.6.6"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS21-3.4.2",
+          "quote": "That the collective amount raised as loan on interest \u2013 whether long-term or short-term debt \u2013 does not exceed 30% of the market capitalization of the corporation",
+          "supports": "Interest-bearing borrowings at 22% comply with the 30% ceiling"
+        },
+        {
+          "chunk_id": "SS21-3.4.3",
+          "quote": "That the total amount of interest-taking deposits, whether short-, medium- or long-term, shall not exceed 30% of the market capitalization of total equity",
+          "supports": "Interest-bearing deposits at 8% comply with the 30% ceiling"
+        },
+        {
+          "chunk_id": "SS21-3.4.4",
+          "quote": "That the amount of income generated from prohibited component does not exceed 5% of the total income of the corporation irrespective of the income being generated by undertaking a prohibited activity, by ownership of a prohibited asset or in some other way",
+          "supports": "1.5% income from conventional finance associate falls below the 5% threshold"
+        },
+        {
+          "chunk_id": "SS21-3.4.6",
+          "quote": "It is obligatory to eliminate prohibited income specific to the share that is mixed up with the earnings of the corporations",
+          "supports": "Purification of prohibited income is mandatory"
+        },
+        {
+          "chunk_id": "SS21-3.4.6.6",
+          "quote": "The responsibility for elimination of the prohibited component of the income, for the benefit of all, falls upon the institution in case it is trading for itself or in case it is managing the operations",
+          "supports": "Institution bears responsibility for executing the purification"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal describes a logistics company that meets the quantitative thresholds established by AAOIFI for shareholding in corporations with mixed (halal and haram) revenue streams. First, interest-bearing borrowings at 22% of market cap fall within the 30% ceiling [SS21-3.4.2]. Second, interest-bearing deposits at 8% fall within the 30% ceiling [SS21-3.4.3]. Third, the 1.5% income from a conventional finance associate is well below the 5% prohibited-income threshold [SS21-3.4.4]. The proposal explicitly contemplates purifying (eliminating) that 1.5% income. Under [SS21-3.4.6], it is obligatory to eliminate prohibited income from the share. The institution bears responsibility for this elimination if it is trading for itself or managing operations [SS21-3.4.6.6]. The compliance team's proposed purification mechanism aligns with this mandatory requirement. All four quantitative screens pass and the purification obligation is acknowledged and operationalized. The arrangement as screened and purified fits within the standards' framework.",
+      "tokens_in": 10739,
+      "tokens_out": 1720,
+      "elapsed_s": 16.5
+    },
+    {
+      "id": "q025",
+      "query": "Same screening exercise, different name. The company lumps everything into one 'other income' line and won't break it out. Leverage looks well under the threshold. Can the fund buy it?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS21-3.4.4",
+        "SS21-3.4.8"
+      ],
+      "difficulty": "medium",
+      "category": "equity_screening",
+      "rationale": "SS21-3.4.4 makes the 5% prohibited income test decisive and directs that more effort be exerted where a source of income is not properly disclosed, and SS21-3.4.8 requires giving up the investment if the rules cannot be applied, so the missing disclosure blocks any firm verdict.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.65,
+      "retrieved": [
+        "SS21-3.4.4",
+        "SS21-3.4",
+        "SS21-3.4.6",
+        "SS21-3.4.6.4",
+        "SS21-3.4.6.6",
+        "SS21-3.4.6.2",
+        "SS21-3.4.2",
+        "SS5-2.2.2"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS21-3.4.4",
+          "quote": "That the amount of income generated from prohibited component does not exceed 5% of the total income of the corporation irrespective of the income being generated by undertaking a prohibited activity, by ownership of a prohibited asset or in some other way. If a source of income is not properly disclosed then more effort is to be exerted for identification thereof giving due care and caution in this respect.",
+          "supports": "Identification and disclosure requirement, but does not define what 'more effort' entails or whether purchase is prohibited before disclosure."
+        },
+        {
+          "chunk_id": "SS21-3.4.2",
+          "quote": "That the collective amount raised as loan on interest \u2013 whether long-term or short-term debt \u2013 does not exceed 30% of the market capitalization of the corporation, knowingly that raising loans on interest is prohibited whatsoever the amount is.",
+          "supports": "Leverage threshold does not bar this investment."
+        },
+        {
+          "chunk_id": "SS21-3.4.6.4",
+          "quote": "The figure, whose elimination is obligatory on the person dealing in shares, is arrived at by dividing the total prohibited income of the corporation whose shares are traded by the number of shares of the corporation, thus, the figure specific to each share is obtained. Thereafter the result is multiplied by the number of shares owned by the dealer \u2013 individual, institution, fund or another \u2013 and the result is what is to be eliminated as an obligation.",
+          "supports": "Elimination requires calculation based on total prohibited income, but clauses do not explain how this is performed when income is not itemized."
+        },
+        {
+          "chunk_id": "SS21-3.4.6.6",
+          "quote": "The responsibility for elimination of the prohibited component of the income, for the benefit of all, falls upon the institution in case it is trading for itself or in case it is managing the operations.",
+          "supports": "Fund bears elimination responsibility, but standard does not address whether fund may purchase before prohibited income is identifiable."
+        }
+      ],
+      "escalations": [
+        "low_confidence",
+        "insufficient_basis"
+      ],
+      "escalation_details": [
+        {
+          "code": "low_confidence",
+          "detail": "model confidence 0.65 below the 0.70 threshold"
+        },
+        {
+          "code": "insufficient_basis",
+          "detail": "retrieved clauses do not settle the question"
+        }
+      ],
+      "concerns": [
+        "haram_underlying",
+        "gharar"
+      ],
+      "reasoning": "The proposal asks whether a fund may buy shares in a company that does not break out prohibited income and instead lumps everything into 'other income.' The clauses establish two distinct requirements: (1) prohibited income must not exceed 5% of total income [SS21-3.4.4], and (2) prohibited income must be identified and eliminated from the fund's share of earnings [SS21-3.4.6, SS21-3.4.6.4, SS21-3.4.6.6]. The leverage threshold is confirmed as acceptable under the 30% debt-to-market-cap rule [SS21-3.4.2].\n\nHowever, the clauses do not directly address whether a fund may acquire or hold shares when the issuer refuses to disclose prohibited income with sufficient granularity to allow calculation and elimination. The standards require that 'if a source of income is not properly disclosed then more effort is to be exerted for identification thereof giving due care and caution in this respect' [SS21-3.4.4]. This language suggests that non-disclosure triggers an investigative obligation on the fund, not an automatic prohibition on purchase. But the clauses do not specify: (a) whether 'more effort' means the fund must demand detailed disclosure before purchase, or conduct independent investigation, or both; (b) what constitutes adequate 'due care and caution'; (c) whether a fund may purchase if the issuer refuses to cooperate; or (d) whether the 5% threshold can be assessed using aggregated 'other income' as a proxy if the underlying prohibited component cannot be separately identified. The standards also make clear that elimination of prohibited income is the fund's obligation if it is managing operations [SS21-3.4.6.6], but do not explain how elimination is calculated or verified when the source data is opaque. Leverage is not a barrier here.",
+      "tokens_in": 28862,
+      "tokens_out": 3644,
+      "elapsed_s": 36.7
+    },
+    {
+      "id": "q026",
+      "query": "An unrelated corporate sponsor has volunteered, in a document entirely separate from the mudarabah agreement and without any fee, to make investors whole if the venture loses capital. He holds no shares in either party. Can we accept that undertaking?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS5-6.6",
+        "SS12-3.1.4.3"
+      ],
+      "difficulty": "hard",
+      "category": "third_party_guarantee",
+      "rationale": "SS5-6.6 permits a third party other than the Mudarib to volunteer to compensate investment losses provided the guarantee is not linked to the mudarabah contract, and the ownership and independence conditions in SS12-3.1.4.3 are all satisfied here.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS5-6.6",
+        "SS45-4.2.4",
+        "SS12-3.1.4.3",
+        "SS1-2.9.3",
+        "SS13-8.2"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS5-6.6",
+          "quote": "It is permissible for a third party, other than the Mudarib or investment agent or one of the partners, to undertake voluntarily that he will compensate the investment losses of the party to whom the undertaking is given, provided this guarantee is not linked in any manner to the Mudarabah financing contract or investment agency contract.",
+          "supports": "Core permissibility of third-party guarantee structure"
+        },
+        {
+          "chunk_id": "SS12-3.1.4.3",
+          "quote": "A third party may provide a guarantee to make up a loss of capital of some or all partners. This guarantee is circumscribed with the conditions that (I) the legal capacity and financial liability of such a third party as a guarantor are independent from the Sharikah contract, (II) the guarantee should neither be provided for consideration nor linked in any manner to the Sharikah contract; (III) the third party guarantor should not own more than a half of the capital in the entity to be guaranteed, and (IV) the guaranteed entity should not own more than a half of the capital in the entity that undertakes to provide a guarantee.",
+          "supports": "Conditions for valid third-party guarantee: independence, no consideration, no ownership linkage"
+        },
+        {
+          "chunk_id": "SS45-4.2.4",
+          "quote": "A voluntary undertaking by a third party acting in the public interest, such as the state, or relevant public interest authorities, such as a guardian, executor or father, to indemnify against a loss of capital without any right of recourse to the investment manager... the third party should be administratively independent of the investment manager and there should be no direct or indirect ownership relationship of more than a half between the investment manager and the third party.",
+          "supports": "Third-party guarantee permissible when administratively independent and no ownership relationship above 50%"
+        },
+        {
+          "chunk_id": "SS1-2.9.3",
+          "quote": "it is permissible for a third party to volunteer being a guarantor for that purpose, provided this guarantee is not stated in the contract.",
+          "supports": "Guarantee must be external to and not incorporated into the primary contract"
+        },
+        {
+          "chunk_id": "SS13-8.2",
+          "quote": "it is permissible for the two parties to construct a separate agreement independent of the Mudarabah contract assigning one party to perform, for a fee, a business activity that is not by custom part of Mudarabah operations.",
+          "supports": "Separate agreements outside the mudarabah contract are permissible when structurally independent"
+        }
+      ],
+      "escalations": [
+        "unresolved_citation"
+      ],
+      "escalation_details": [
+        {
+          "code": "unresolved_citation",
+          "detail": "quote alters the force of SS45-4.2.4 \u2014 insert of ['valid']: quote says '(nothing)', clause says 'such as a government pledge in respect of an investment project in order for this undertaking to be valid'"
+        }
+      ],
+      "concerns": [],
+      "reasoning": "The proposal describes a third-party guarantee of investment losses offered voluntarily, outside the mudarabah agreement, with no fee to the guarantor and no shareholding in either party. This arrangement is directly contemplated and permitted by the retrieved clauses.\n\nSS5-6.6 explicitly permits exactly this structure: 'It is permissible for a third party, other than the Mudarib or investment agent or one of the partners, to undertake voluntarily that he will compensate the investment losses of the party to whom the undertaking is given, provided this guarantee is not linked in any manner to the Mudarabah financing contract or investment agency contract.' The proposal satisfies all elements: the guarantor is unrelated (not the Mudarib or a partner), the undertaking is voluntary, there is no fee, and the guarantee document is separate from the mudarabah agreement.\n\nSS12-3.1.4.3 reinforces this for Sharikah contexts with four conditions: (I) the guarantor's legal capacity must be independent from the contract\u2014satisfied, as the guarantor is external; (II) the guarantee must not be for consideration and must not be linked to the contract\u2014satisfied, as it is free-standing and cost-free; (III) the guarantor must not own more than half the entity\u2014satisfied, as the guarantor holds no shares; and (IV) the guaranteed entity must not own more than half the guarantor\u2014satisfied, as they are unrelated. Though this clause addresses Sharikah rather than Mudarabah, the structural principles align.\n\nSS45-4.2.4 confirms that voluntary third-party indemnification is a permissible protection method, requiring only that the third party be administratively independent of the investment manager and that there be no direct or indirect ownership relationship of more than half\u2014both met here.\n\nSS1-2.9.3 adds a caution that such guarantees 'should not be stated in the contract'\u2014meaning they must remain outside the primary agreement. The proposal specifies the guarantee is in 'a document entirely separate from the mudarabah agreement,' which aligns with this requirement.\n\nNo prohibition or conflict arises from the clauses. The arrangement is structurally Shari'ah-permissible on the evidence supplied.",
+      "tokens_in": 12185,
+      "tokens_out": 2306,
+      "elapsed_s": 21.6
+    },
+    {
+      "id": "q027",
+      "query": "A group company has offered to cover any capital loss investors suffer in our musharakah. It's a related entity inside the same group. Can we rely on that undertaking?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS12-3.1.4.3",
+        "SS45-4.2.4"
+      ],
+      "difficulty": "hard",
+      "category": "third_party_guarantee",
+      "rationale": "SS12-3.1.4.3 makes the answer turn on facts the question does not supply, namely whether either entity owns more than half of the other and whether the guarantee is free of consideration and unlinked to the contract, and SS45-4.2.4 imposes the same independence test.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.85,
+      "retrieved": [
+        "SS12-3.1.4.3",
+        "SS45-4.2.4",
+        "SS12-3.1.4.1",
+        "SS5-6.6",
+        "SS45-4.2.5",
+        "SS12-4.1.1.2",
+        "SS35-4.2.5",
+        "SS13-8.2"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS12-3.1.4.1",
+          "quote": "no one is liable except in cases of misconduct, negligence or breach of contract. It is not permitted to stipulate that a partner in a Sharikah contract guarantees the capital of another partner.",
+          "supports": "prohibition on partner-to-partner capital guarantees"
+        },
+        {
+          "chunk_id": "SS12-3.1.4.3",
+          "quote": "the guaranteed entity should not own more than a half of the capital in the entity that undertakes to provide a guarantee",
+          "supports": "the critical ownership test that fails for group-related entities"
+        },
+        {
+          "chunk_id": "SS12-3.1.4.3",
+          "quote": "A third party may provide a guarantee to make up a loss of capital of some or all partners. This guarantee is circumscribed with the conditions that (I) the legal capacity and financial liability of such a third party as a guarantor are independent from the Sharikah contract, (II) the guarantee should neither be provided for consideration nor linked in any manner to the Sharikah contract",
+          "supports": "the independence and delinkage requirements for valid third-party guarantees"
+        },
+        {
+          "chunk_id": "SS45-4.2.4",
+          "quote": "the third party should be administratively independent of the investment manager and there should be no direct or indirect ownership relationship of more than a half between the investment manager and the third party",
+          "supports": "parallel ownership and independence tests in capital protection standards"
+        },
+        {
+          "chunk_id": "SS5-6.6",
+          "quote": "It is permissible for a third party, other than the Mudarib or investment agent or one of the partners, to undertake voluntarily that he will compensate the investment losses of the party to whom the undertaking is given, provided this guarantee is not linked in any manner to the Mudarabah financing contract or investment agency contract.",
+          "supports": "confirming that third parties may give guarantees only when truly independent and unlinked"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "riba",
+        "ownership_sequence",
+        "profit_guarantee"
+      ],
+      "reasoning": "The proposal seeks to rely on an undertaking by a related group company to cover capital losses in a musharakah. The retrieved clauses establish a clear framework for when third-party capital loss guarantees are permissible in musharakah, and the group company's offer fails the decisive structural test.\n\nFirst, SS12-3.1.4.1 prohibits a partner from guaranteeing another partner's capital: 'no one is liable except in cases of misconduct, negligence or breach of contract. It is not permitted to stipulate that a partner in a Sharikah contract guarantees the capital of another partner.' If the group company is itself a partner in the musharakah, the guarantee is prohibited outright.\n\nIf the group company is a third party (not a partner), SS12-3.1.4.3 permits a third-party capital loss guarantee but imposes four strict conditions. The critical constraint is condition (IV): 'the guaranteed entity should not own more than a half of the capital in the entity that undertakes to provide a guarantee.' Since the proposal describes the guarantor as 'a related entity inside the same group,' the guarantor and the musharakah (the guaranteed entity) are group affiliates. This creates an ownership relationship that must be evaluated against the one-half threshold. If the musharakah or its partners collectively own more than 50% of the group company providing the guarantee, or the group company owns more than 50% of the musharakah, condition (IV) fails and the guarantee is prohibited.\n\nSS45-4.2.4 reinforces the independence requirement: 'the third party should be administratively independent of the investment manager and there should be no direct or indirect ownership relationship of more than a half between the investment manager and the third party.' The same ownership test applies. A related group entity is unlikely to meet the administrative independence standard either.\n\nThe proposal does not specify the ownership structure, so it is not possible to confirm the exact breach with certainty. However, the burden of proof is on demonstrating compliance with the one-half threshold. The description 'related entity inside the same group' strongly suggests the ownership or control relationship exceeds the permissible limit. Even if ownership is below 50%, the group relationship raises questions about administrative independence.",
+      "tokens_in": 29343,
+      "tokens_out": 4053,
+      "elapsed_s": 38.0
+    },
+    {
+      "id": "q028",
+      "query": "Retail wants to market the mudarabah investment account with a guaranteed minimum annual return of 3% so it can compete with conventional term deposits. Can we offer that?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS40-2.2.2",
+        "SS13-8.7"
+      ],
+      "difficulty": "medium",
+      "category": "profit_guarantee",
+      "rationale": "SS40-2.2.2 says the Institution is not committed to guarantee investment accounts and may not pay any fixed or variable increment, and SS13-8.7 ties profit to the actual outcome at liquidation, but a guaranteed return on a profit-sharing account is an escalation category that must go to the Shari'ah board rather than be cleared by the system.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS40-2.2.2",
+        "SS5-3.3.4",
+        "SS40-4.10.2",
+        "SS40-2.1",
+        "SS40-2.1.2"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS40-2.2.2",
+          "quote": "The institution should not assume the commitment to pay any fixed or variable increment on the principal amounts of such accounts, because such payment constitutes usurious interest. The institution is not committed to guarantee investment accounts. It is only committed to distribute their profit or loss among their holders as per the ratios agreed upon.",
+          "supports": "Core prohibition on guaranteed returns in mudarabah investment accounts"
+        },
+        {
+          "chunk_id": "SS5-3.3.4",
+          "quote": "If an Institution manages transactions on the basis of Mudarabah or Musharakah or investment agency, it is not permitted for it to guarantee the fluctuations of currency exchange rates so that the investors will recover their investment shares irrespective of the behaviour of the currency market. Such a guarantee is prohibited",
+          "supports": "Broader principle that guarantees ensuring recovery 'irrespective of' market outcomes are prohibited in mudarabah structures"
+        },
+        {
+          "chunk_id": "SS40-2.1.2",
+          "quote": "The holder of the account bears all the losses in proportion to his share in the capital, except losses arising from transgression, negligence or breach of contract, which have to be borne by the institution.",
+          "supports": "Loss-bearing obligation confirms mudarabah accounts are not protected; guaranteeing returns would contradict this foundational feature"
+        }
+      ],
+      "escalations": [
+        "always_review_category"
+      ],
+      "escalation_details": [
+        {
+          "code": "always_review_category",
+          "detail": "capital or profit guarantee on a profit-sharing contract"
+        }
+      ],
+      "concerns": [
+        "profit_guarantee",
+        "riba"
+      ],
+      "reasoning": "The proposal directly contradicts the mandatory prohibition on guaranteed returns in mudarabah investment accounts. Clause SS40-2.2.2 explicitly states that the institution 'should not assume the commitment to pay any fixed or variable increment on the principal amounts of such accounts, because such payment constitutes usurious interest.' A guaranteed minimum annual return of 3% is a fixed increment on the principal, which the standard categorically prohibits. The clause further clarifies that 'The institution is not committed to guarantee investment accounts. It is only committed to distribute their profit or loss among their holders as per the ratios agreed upon.' This means returns must be variable, tied to actual investment performance, not predetermined. Clause SS5-3.3.4 reinforces this principle by prohibiting guarantees that allow 'investors will recover their investment shares irrespective of' market conditions\u2014a mudarabah account by definition exposes the investor to loss if investments underperform. The structure the retail team proposes converts the mudarabah (profit-sharing) account into a quasi-fixed-income instrument, which Shari'ah standards treat as usurious. The account can only be compliant if returns are distributed based on actual profit-sharing ratios after the bank's investment activities conclude, not guaranteed in advance.",
+      "tokens_in": 12260,
+      "tokens_out": 1876,
+      "elapsed_s": 20.1
+    },
+    {
+      "id": "q029",
+      "query": "We're issuing investment sukuk over a portfolio that is roughly 55% murabaha receivables and 45% leased assets, and we want the certificates freely tradable on the secondary market. Does the asset mix work?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS17-5.1.2",
+        "SS21-3.19"
+      ],
+      "difficulty": "hard",
+      "category": "sukuk_issuance",
+      "rationale": "SS17-5.1.2 bars securitising debts for the purpose of trading while SS21-3.19 allows trading where tangible assets and rights carry the activity above a stated proportion, so a mixed-pool issuance sits on the boundary and is an escalation category.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.62,
+      "retrieved": [
+        "SS17-5.2.4",
+        "SS17-5.2.15",
+        "SS17-5.2.16",
+        "SS17-5.2.6",
+        "SS21-3.19",
+        "SS17-4.2",
+        "SS17-5.1.2",
+        "SS17-5.2.9"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS17-5.2.15",
+          "quote": "It is not permissible to trade in Murabahah certificates after delivery of the Murabahah commodity to the buyer.",
+          "supports": "Restriction on post-delivery murabaha trading"
+        },
+        {
+          "chunk_id": "SS17-5.2.4",
+          "quote": "It is permissible, immediately upon issue and up to the date of maturity, but after the passing of ownership of the assets to the holders of the Sukuk, to trade in Sukuk that represent ownership of existing leased assets or assets to be leased on promise.",
+          "supports": "Leased assets are immediately tradable"
+        },
+        {
+          "chunk_id": "SS17-5.1.2",
+          "quote": "As for debts owed as a liability, it is not permissible to securitize them for the purpose of trading.",
+          "supports": "Prohibition on securitizing debts intended for trading"
+        },
+        {
+          "chunk_id": "SS17-4.2",
+          "quote": "Investment Sukuk represent a common share in the ownership of the assets made available for investment, whether these are nonmonetary assets, usufructs, services or a mixture of all these plus intangible rights, debts and monetary assets.",
+          "supports": "Sukuk may represent mixed asset classes, but this does not settle secondary trading rules"
+        },
+        {
+          "chunk_id": "SS21-3.19",
+          "quote": "If its purpose and activity pertain to trading in tangible assets, benefits and rights, trading in its shares is permissible without taking into account the rules of Sarf or transactions in debts, with the condition that the total market value of assets, benefits and rights should not be less than 30% of the total assets value",
+          "supports": "Mixed-asset framework exists for corporate shares; applicability to sukuk unclear"
+        }
+      ],
+      "escalations": [
+        "low_confidence",
+        "insufficient_basis"
+      ],
+      "escalation_details": [
+        {
+          "code": "low_confidence",
+          "detail": "model confidence 0.62 below the 0.70 threshold"
+        },
+        {
+          "code": "insufficient_basis",
+          "detail": "retrieved clauses do not settle the question"
+        }
+      ],
+      "concerns": [
+        "maysir",
+        "gharar",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal requests issuance of sukuk over a mixed portfolio (55% murabaha receivables, 45% leased assets) with free secondary market tradability. The retrieved clauses establish strict asset-specific rules for secondary trading that create tension with a blended pool, but do not directly address whether such a mixture is permissible at issuance or what trading rules apply to a sukuk backed by both asset classes simultaneously.\n\nThe core problem: SS17-5.2.15 prohibits trading in murabaha certificates \"after delivery of the Murabahah commodity to the buyer,\" whereas SS17-5.2.4 permits trading in sukuk representing leased assets \"immediately upon issue and up to the date of maturity.\" If the murabaha receivables in the pool represent debts owed by the buyer after commodity delivery, then that portion of the pool cannot be freely traded per SS17-5.2.15. If, instead, the murabaha certificates represent the bank's ownership stake before sale to the buyer (the intermediate stage), they may be tradable per SS17-5.2.15's exception. The proposal does not specify the timing or nature of the murabaha receivables.\n\nSS21-3.19 offers a mixed-asset framework: when a corporation holds both tangible assets and debts, trading in shares is permissible if the primary asset class and objective govern the rule, and if tangible assets/benefits/rights comprise at least 30% of total assets. This clause could theoretically accommodate a 55/45 blend, but it applies to equity shares in a corporation, not to sukuk. Sukuk are defined in SS17-4.2 as representing \"a common share in the ownership of the assets\" and are distinct from debt instruments. It is unclear whether SS21-3.19's mixed-asset rule applies by analogy to investment sukuk backed by heterogeneous assets.\n\nSS17-5.1.2 states that debts \"owed as a liability\" may not be securitized \"for the purpose of trading.\" This raises a critical ambiguity: are murabaha receivables in the pool treated as debts owed *by the sukuk holder to the bank* (in which case they could potentially be securitized), or does the clause prohibit securitizing all debt instruments regardless of direction? If murabaha receivables constitute liabilities from the bank's perspective, the clause may bar their inclusion in a tradable sukuk pool.\n\nThe clauses do not explicitly address: (i) whether a sukuk backed by an intentionally mixed pool of murabaha receivables and leased assets is permissible; (ii) which trading regime applies when a single sukuk certificate represents fractional ownership of both asset classes; or (iii) how to reconcile the per-asset-class trading restrictions under SS17-5.2.15 and SS17-5.2.4 when both classes are bundled in one instrument.",
+      "tokens_in": 26150,
+      "tokens_out": 4046,
+      "elapsed_s": 36.3
+    },
+    {
+      "id": "q030",
+      "query": "Attached is the term sheet for the new auto finance product. Please approve it so we can launch next month.",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS29-3.4"
+      ],
+      "difficulty": "easy",
+      "category": "approval_request",
+      "rationale": "SS29-3.4 places a duty on the Institution to seek a fatwa for every operation it intends to pursue, so a request for product approval belongs with the Shari'ah Supervisory Board and not with an automated verdict.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.4,
+      "retrieved": [
+        "SS17-5.1.5.5",
+        "SS8-4.8",
+        "SS8-3.1.1",
+        "SS17-3.5",
+        "SS20-4.1.4",
+        "SS37-2.4",
+        "SS37-2.5",
+        "SS37-3.1.1"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-3.1.1",
+          "quote": "The Institution shall not sell any item in a Murabahah transaction before it acquires such item.",
+          "supports": "Identification of key structural requirement if product is Murabahah-based"
+        },
+        {
+          "chunk_id": "SS8-4.8",
+          "quote": "It is not permitted subsequently to demand any extra payment either in consideration of extra time",
+          "supports": "Identification of key constraint on late payment pricing if product uses deferred payment"
+        }
+      ],
+      "escalations": [
+        "low_confidence",
+        "insufficient_basis"
+      ],
+      "escalation_details": [
+        {
+          "code": "low_confidence",
+          "detail": "model confidence 0.40 below the 0.70 threshold"
+        },
+        {
+          "code": "insufficient_basis",
+          "detail": "retrieved clauses do not settle the question"
+        }
+      ],
+      "concerns": [
+        "gharar",
+        "late_payment_penalty",
+        "haram_underlying"
+      ],
+      "reasoning": "The proposal requests approval of an 'auto finance product' but provides no term sheet, contract structure, pricing mechanism, payment terms, or operational details. The retrieved clauses address Murabahah (cost-plus sale), Murabahah Sukuk (investment certificates), commodity sales, and credit facilities\u2014each with specific requirements. Without knowing which of these structures (if any) the product employs, whether the institution will acquire vehicles before sale, how pricing and late payment are handled, or what the actual customer obligations are, the clauses cannot be applied. The most relevant constraint [SS8-3.1.1] requires the institution to acquire the asset before selling it to the customer; [SS8-4.8] prohibits extra charges for extended payment time. But the proposal contains no information about acquisition sequence, price structure, or deferred payment terms. A preliminary assessment cannot proceed from a label alone.",
+      "tokens_in": 26957,
+      "tokens_out": 3140,
+      "elapsed_s": 29.9
+    },
+    {
+      "id": "q031",
+      "query": "What's the VAT treatment of the mark-up on a murabaha sale in the UAE? Is the profit element taxable supply?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [],
+      "difficulty": "easy",
+      "category": "out_of_scope_tax",
+      "rationale": "Tax treatment is outside the AAOIFI Shari'ah Standards corpus entirely, so no clause governs the answer and the query must be escalated.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.0,
+      "retrieved": [
+        "SS40-4.7",
+        "SS13-8.8",
+        "SS40-4.9",
+        "SS8-4.7",
+        "SS8-4.6"
+      ],
+      "cited": [],
+      "escalations": [
+        "weak_retrieval",
+        "schema_validation_failed"
+      ],
+      "escalation_details": [
+        {
+          "code": "weak_retrieval",
+          "detail": "best reranked clause scored 0.200, below the 0.35 floor for reasoning"
+        },
+        {
+          "code": "schema_validation_failed",
+          "detail": "model did not return a valid assessment"
+        }
+      ],
+      "concerns": [],
+      "reasoning": "No assessment was produced; this request requires human review.",
+      "tokens_in": 9112,
+      "tokens_out": 990,
+      "elapsed_s": 9.3
+    },
+    {
+      "id": "q032",
+      "query": "What risk weight does Basel III assign to an ijarah muntahia bittamleek asset sitting on our balance sheet?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [],
+      "difficulty": "easy",
+      "category": "out_of_scope_prudential",
+      "rationale": "Prudential capital treatment is a banking regulation question with no governing clause in the Shari'ah Standards corpus.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.0,
+      "retrieved": [
+        "SS9-8.6",
+        "SS9-7.1.2",
+        "SS40-4.2.3",
+        "SS9-2.4",
+        "SS9-5.2.2"
+      ],
+      "cited": [],
+      "escalations": [
+        "weak_retrieval",
+        "schema_validation_failed"
+      ],
+      "escalation_details": [
+        {
+          "code": "weak_retrieval",
+          "detail": "best reranked clause scored 0.200, below the 0.35 floor for reasoning"
+        },
+        {
+          "code": "schema_validation_failed",
+          "detail": "model did not return a valid assessment"
+        }
+      ],
+      "concerns": [],
+      "reasoning": "No assessment was produced; this request requires human review.",
+      "tokens_in": 9673,
+      "tokens_out": 959,
+      "elapsed_s": 8.9
+    },
+    {
+      "id": "q033",
+      "query": "Our conventional subsidiary is repricing its savings book. What base interest rate should we set for next quarter?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [],
+      "difficulty": "easy",
+      "category": "out_of_scope_conventional_rate",
+      "rationale": "Setting a conventional interest rate is outside the corpus and outside the system's remit, so it must be escalated rather than answered.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.0,
+      "retrieved": [
+        "SS40-2.2.8",
+        "SS6-9.1.1",
+        "SS40-2.2.2",
+        "SS35-5.1.3.1",
+        "SS19-10.1.3"
+      ],
+      "cited": [],
+      "escalations": [
+        "weak_retrieval",
+        "schema_validation_failed"
+      ],
+      "escalation_details": [
+        {
+          "code": "weak_retrieval",
+          "detail": "best reranked clause scored 0.300, below the 0.35 floor for reasoning"
+        },
+        {
+          "code": "schema_validation_failed",
+          "detail": "model did not return a valid assessment"
+        }
+      ],
+      "concerns": [],
+      "reasoning": "No assessment was produced; this request requires human review.",
+      "tokens_in": 8642,
+      "tokens_out": 934,
+      "elapsed_s": 9.4
+    },
+    {
+      "id": "q034",
+      "query": "Murabaha request came in where the supplier the customer nominated turns out to be his brother-in-law's trading company. Everything else on the file looks normal. Can we proceed?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS8-2.2.4",
+        "SS8-2.2.3"
+      ],
+      "difficulty": "medium",
+      "category": "related_party",
+      "rationale": "SS8-2.2.4 requires the Institution to verify, where the supplier has a blood or marital relationship with the customer, that the sale is not fictitious or a stratagem for 'inah, and that verification is a factual finding the query does not supply.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.62,
+      "retrieved": [
+        "SS8-2.2.4",
+        "SS8-2.2.2",
+        "SS8-2.5.1",
+        "SS8-2.1.2",
+        "SS8-2.2.1"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-2.2.4",
+          "quote": "If the supplier (owner) of the item has a blood relationship or marital relationship with the customer, then the Institution shall verify, before entering into Murabahah, that the sale is not fictitious and not a stratagem for the sale of 'Inah.",
+          "supports": "The brother-in-law relationship triggers a mandatory verification duty."
+        },
+        {
+          "chunk_id": "SS8-2.2.2",
+          "quote": "It is essential to exclude any prior contractual relationship between the customer who is the purchase orderer and the original supplier of the item ordered, if any, regarding the supply of the item.",
+          "supports": "Requirement to rule out prior dealings that would make the transaction fictitious."
+        },
+        {
+          "chunk_id": "SS8-2.5.1",
+          "quote": "This guarantee is required only in cases where the customer has suggested a particular source of supply for the item that is the subject matter of the Murabahah contract.",
+          "supports": "Additional procedural safeguard when customer nominates supplier, which applies here."
+        }
+      ],
+      "escalations": [
+        "low_confidence",
+        "insufficient_basis"
+      ],
+      "escalation_details": [
+        {
+          "code": "low_confidence",
+          "detail": "model confidence 0.62 below the 0.70 threshold"
+        },
+        {
+          "code": "insufficient_basis",
+          "detail": "retrieved clauses do not settle the question"
+        }
+      ],
+      "concerns": [
+        "ownership_sequence",
+        "gharar"
+      ],
+      "reasoning": "The clauses establish two relevant requirements. First, [SS8-2.2.4] mandates that when a supplier has a blood or marital relationship with the customer, the Institution must verify the sale is not fictitious and not a stratagem for 'inah. The brother-in-law relationship clearly triggers this verification requirement. Second, [SS8-2.2.2] prohibits prior contractual relationships between the customer and supplier, requiring that the transaction be genuine, not fictitious. However, the proposal does not state whether: (1) a verification that the sale is genuine and not an 'inah stratagem has been or can be completed; (2) any prior contractual relationship exists between the customer and the brother-in-law's company; or (3) the company is genuinely trading with a legitimate purpose or is a shell entity. The clauses do not prohibit proceeding when a related party is the supplier\u2014they impose a conditional duty to verify authenticity before entry. The Institution cannot proceed without satisfying that verification step, but the proposal provides no information about its status. Additionally, [SS8-2.5.1] indicates that a guarantee from the customer regarding the supplier's performance is permissible when the customer suggests a particular source of supply, which may be relevant here, but again this does not settle whether the transaction itself is permitted without the verification mentioned in [SS8-2.2.4].",
+      "tokens_in": 11377,
+      "tokens_out": 1702,
+      "elapsed_s": 17.0
+    },
+    {
+      "id": "q035",
+      "query": "Customer wants to lease a warehouse from us. He's told us he'll be storing general merchandise and hasn't said more than that. Can we sign the ijarah?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS9-5.1.1",
+        "SS9-5.1.3"
+      ],
+      "difficulty": "medium",
+      "category": "permissible_use",
+      "rationale": "SS9-5.1.1 makes the permissibility of the lessee's use decisive and SS9-5.1.3 turns on whether the lessor knows or has reason to presume an impermissible purpose, so an undescribed cargo leaves the governing fact open.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.65,
+      "retrieved": [
+        "SS9-5.1.1",
+        "SS9-5.1.3",
+        "SS9-3.5",
+        "SS9-2.1",
+        "SS9-2.2",
+        "SS9-5.1.4",
+        "SS9-5.1.5"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS9-5.1.1",
+          "quote": "The leased asset must be capable of being used while preserving the asset, and the benefit from an Ijarah must be permissible by Shari'ah. For example, a house or a chattel may not be leased for the purpose of an impermissible act by the lessee, such as leasing premises to be used as headquarters by an Institution dealing in interest or to a shopkeeper for selling or storing prohibited goods, or leasing a vehicle to transport prohibited merchandise.",
+          "supports": "establishing that the permissibility of the benefit is a mandatory condition for ijarah"
+        },
+        {
+          "chunk_id": "SS9-5.1.3",
+          "quote": "An Ijarah contract may be executed for a house or a chattel, even with a non-Muslim, if the use to be made of it is permissible, such as a house for residential purposes, a car for transport, or a computer to store data, unless the lessor knows in advance, or has reason to presume, that the use of the asset to be leased will be for an impermissible purpose.",
+          "supports": "identifying the standard for when an ijarah should not proceed: if the lessor knows or has reason to presume impermissible use"
+        }
+      ],
+      "escalations": [
+        "low_confidence",
+        "insufficient_basis"
+      ],
+      "escalation_details": [
+        {
+          "code": "low_confidence",
+          "detail": "model confidence 0.65 below the 0.70 threshold"
+        },
+        {
+          "code": "insufficient_basis",
+          "detail": "retrieved clauses do not settle the question"
+        }
+      ],
+      "concerns": [
+        "haram_underlying"
+      ],
+      "reasoning": "The critical Shari'ah requirement is that the benefit from the ijarah must be permissible by Shari'ah. SS9-5.1.1 establishes that a warehouse may not be leased if the lessee intends to store prohibited goods. SS9-5.1.3 reinforces this by stating that an ijarah may be executed 'unless the lessor knows in advance, or has reason to presume, that the use of the asset to be leased will be for an impermissible purpose.' The customer has disclosed only that he will store 'general merchandise' without specifying what that merchandise is. Under the standards, the bank must either know the intended use is permissible or have no reasonable grounds to suspect impermissible use. A vague statement about 'general merchandise' does not affirmatively establish permissibility of use. The standards do not explicitly state whether a lessor must conduct due diligence to ascertain the nature of stored goods, nor do they define what level of specificity in use disclosure satisfies the requirement. The clauses establish the rule but the proposal omits the factual determination\u2014whether 'general merchandise' constitutes sufficient disclosure to establish that the use will not be for prohibited goods, or whether the bank has reason to presume impermissible use. This is a gap between the contractual fact pattern and the standard's application.",
+      "tokens_in": 23337,
+      "tokens_out": 2657,
+      "elapsed_s": 26.3
+    },
+    {
+      "id": "q036",
+      "query": "Our Malaysian counterparty's Shari'ah committee has cleared a bay' al-'inah leg that our own policy rules out, and they want us to accept their sign-off for the joint deal. How do we resolve that?",
+      "gold_verdict": "NEEDS_REVIEW",
+      "gold_clauses": [
+        "SS29-7.4",
+        "SS29-6.4"
+      ],
+      "difficulty": "hard",
+      "category": "conflicting_fatwa",
+      "rationale": "SS29-7.4 contemplates referring a contested fatwa to a more authoritative board and SS29-6.4 warns against demanding a ruling aligned to a particular school, so a conflict between two boards is resolved by escalation, not by the system picking a side.",
+      "actual_verdict": "NEEDS_REVIEW",
+      "confidence": 0.6,
+      "retrieved": [
+        "SS25-6.3.1",
+        "SS49-4.1",
+        "SS49-3.3",
+        "SS24-5.4",
+        "SS49-3.1",
+        "SS25-6.1.1",
+        "SS25-5.1",
+        "SS26-5.9"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS49-3.3",
+          "quote": "Any promise in a sale contract made by the buyer or the seller that results in a repurchase contract ('Inah) is prohibited by the Shari'ah",
+          "supports": "bay' al-'inah is prohibited under AAOIFI standards"
+        },
+        {
+          "chunk_id": "SS25-6.3.1",
+          "quote": "Muwata`ah to form up Riba tricks, in which the two parties agree to practice, for instance, Bay' al-'Inah or its reverse... the contract so designed is invalid",
+          "supports": "bay' al-'inah structures designed as riba schemes are invalid"
+        },
+        {
+          "chunk_id": "SS24-5.4",
+          "quote": "Arrangement, implementation and follow up of syndicated financing operations should take place under supervision of the Shari'ah supervisory boards of the Institutions participating in the syndication. Preferably, a joint committee of the Shari'ah supervisory boards of these Institutions could be formed",
+          "supports": "syndicated arrangements may be supervised by participating boards or a joint committee"
+        },
+        {
+          "chunk_id": "SS25-5.1",
+          "quote": "the concessions to be granted in this case should be judged in the light of traditions, practice and professional experience, and subjected to clearance by the Shari'ah Supervisory Board of the Institution",
+          "supports": "combined contracts must receive clearance from each institution's own Shari'ah board"
+        }
+      ],
+      "escalations": [
+        "always_review_category",
+        "unresolved_citation",
+        "low_confidence",
+        "insufficient_basis"
+      ],
+      "escalation_details": [
+        {
+          "code": "always_review_category",
+          "detail": "request framed as seeking approval rather than assessment"
+        },
+        {
+          "code": "unresolved_citation",
+          "detail": "quote alters the force of SS25-6.3.1 \u2014 replace of ['invalid']: quote says 'the contract so designed is invalid', clause says 'or bay al wafa bay bay al raja al raja or riba al fadl al fadl in this case shari ah prohibits'"
+        },
+        {
+          "code": "low_confidence",
+          "detail": "model confidence 0.60 below the 0.70 threshold"
+        },
+        {
+          "code": "insufficient_basis",
+          "detail": "retrieved clauses do not settle the question"
+        }
+      ],
+      "concerns": [
+        "riba",
+        "gharar",
+        "maysir",
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal asks how Mal should resolve a jurisdictional conflict between its own Shari'ah policy (which prohibits bay' al-'inah) and a Malaysian counterparty's Shari'ah committee clearance of the same structure. The retrieved clauses clearly establish that bay' al-'inah is prohibited under AAOIFI standards [SS49-3.3, SS25-6.3.1]. However, the clauses do not address the substantive question: whether Mal may rely on a foreign institution's Shari'ah approval to override its own policy, or how to reconcile differing Shari'ah determinations in a syndicated context. Clause SS24-5.4 addresses syndicated financing governance and mentions that a joint Shari'ah committee 'could be formed' but does not mandate it or specify what happens when participating institutions' boards disagree. Clause SS25-5.1 requires that combined contracts be 'subjected to clearance by the Shari'ah Supervisory Board of the Institution,' which points toward Mal's own ISSC having final authority over Mal's participation, but does not resolve whether accepting another institution's fatwa satisfies that requirement. The bay' al-'inah prohibition itself is not in dispute; the dispute is institutional and procedural\u2014a governance question outside the scope of the product standards provided.",
+      "tokens_in": 28671,
+      "tokens_out": 3866,
+      "elapsed_s": 35.5
+    },
+    {
+      "id": "q037",
+      "query": "Can we issue a debit card that only draws on the customer's own cleared balance and carries no interest charge?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS2-3.1"
+      ],
+      "difficulty": "easy",
+      "category": "cards",
+      "rationale": "SS2-3.1 permits Institutions to issue debit cards as long as the cardholder does not exceed the balance available on his account and no interest charge arises.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS2-3.1",
+        "SS2-2.1.2",
+        "SS2-3.2.3",
+        "SS2-4.5.1",
+        "SS2-2.1.3"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS2-3.1",
+          "quote": "It is permissible for Institutions to issue debit cards, as long as the cardholder does not exceed the balance available on his account and no interest charge arises out of the transaction.",
+          "supports": "Core permissibility of the proposed debit card structure"
+        },
+        {
+          "chunk_id": "SS2-2.1.2",
+          "quote": "The card confers on its holder the right to withdraw cash from his account or to pay for goods or services purchased up to the limit of the available funds (credit balance) on his account. The debit to the customer's account will be immediate, and the card does not provide him with any credit.",
+          "supports": "The card structure ensures no borrowing occurs and debit is immediate, consistent with the proposal"
+        },
+        {
+          "chunk_id": "SS2-4.5.1",
+          "quote": "It is permissible for the cardholder to withdraw an amount of cash within the limit of his available funds, or more with the agreement of the Institution issuing the card, provided no interest is charged.",
+          "supports": "Cash withdrawal function is permitted provided no interest is charged, which the proposal satisfies"
+        },
+        {
+          "chunk_id": "SS2-2.1.3",
+          "quote": "The customer will not normally pay any charges for using this card, except when it is used to withdraw cash or to purchase another currency through another Institution different from the Institution that has issued the card.",
+          "supports": "No charges are normally incurred unless using the card through a different institution or for currency exchange, neither of which is part of this proposal"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal describes a debit card that draws only on the customer's cleared balance and carries no interest charge. This arrangement meets all the permissibility conditions set out in the AAOIFI standards. First, the cardholder will not exceed the balance available on his account because the card draws only on cleared funds\u2014a structural constraint that prevents overdraft. Second, no interest charge arises out of the transaction, as explicitly stated in the proposal. These are the two conditions laid out in the permissibility standard for debit card issuance. The proposal also aligns with the core characteristic that the card confers the right to withdraw cash or pay for goods or services up to the limit of available funds, with immediate debit to the account and no credit provision. The prohibition on interest is reinforced in the standards governing cash withdrawal, which permit withdrawals within available funds provided no interest is charged. The only potential charge mentioned in the standards\u2014fees for cash withdrawal through another institution or currency purchase through a different institution\u2014is not part of this proposal, so the customer will not normally pay charges. The arrangement is straightforward and unambiguous against the retrieved clauses.",
+      "tokens_in": 9831,
+      "tokens_out": 1782,
+      "elapsed_s": 17.9
+    },
+    {
+      "id": "q038",
+      "query": "On ATM cash withdrawals we want a flat SAR 15 per transaction regardless of how much is taken out. Permissible?",
+      "gold_verdict": "COMPLIANT",
+      "gold_clauses": [
+        "SS2-4.5.2",
+        "SS19-10.3.2"
+      ],
+      "difficulty": "medium",
+      "category": "qard_fees",
+      "rationale": "SS2-4.5.2 permits a flat service fee proportionate to the service but not one varying with the amount withdrawn, and SS19-10.3.2 confirms the charge must be certain and unlinked to the amount or the repayment period.",
+      "actual_verdict": "COMPLIANT",
+      "confidence": 0.92,
+      "retrieved": [
+        "SS2-4.5.2",
+        "SS19-10.3.2",
+        "SS19-9.1",
+        "SS19-10.1.3",
+        "SS2-4.5.1"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS2-4.5.2",
+          "quote": "It is permissible for the Institution issuing the card to charge a flat service fee for cash withdrawal, proportionate to the service offered, but not a fee that varies with the amount withdrawn.",
+          "supports": "Direct permissibility of flat fees and prohibition of amount-varying fees"
+        },
+        {
+          "chunk_id": "SS19-10.3.2",
+          "quote": "It is necessary that the charges imposed on credit cards for cash withdrawals from bank teller machines be an amount that is certain within the limits of reasonable charges excluding profit from Qard. It is not permissible to link the charge to the amount withdrawn.",
+          "supports": "Requirement for certainty and explicit prohibition on linking charges to withdrawal amount, which a flat fee satisfies"
+        },
+        {
+          "chunk_id": "SS19-10.1.3",
+          "quote": "It is permissible for the institution to render services related to deposits and withdrawals to the owners of the current accounts with or without compensation like chequebooks and ATM cards and the like.",
+          "supports": "General permissibility of charging for ATM card services"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [],
+      "reasoning": "The proposal to charge a flat SAR 15 per ATM transaction regardless of withdrawal amount is directly and affirmatively permitted by the retrieved standards. SS2-4.5.2 explicitly states: 'It is permissible for the Institution issuing the card to charge a flat service fee for cash withdrawal, proportionate to the service offered, but not a fee that varies with the amount withdrawn.' A flat fee by definition does not vary with the amount withdrawn and therefore satisfies this condition. SS19-10.3.2 reinforces this from the credit card loan perspective, stating 'It is necessary that the charges imposed on credit cards for cash withdrawals from bank teller machines be an amount that is certain' and crucially: 'It is not permissible to link the charge to the amount withdrawn.' A flat SAR 15 charge meets the requirement of certainty and expressly avoids linking to withdrawal amount. SS19-10.1.3 confirms the permissibility of rendering ATM card services with compensation. The flat-fee structure aligns with both the letter and purpose of the standards, which prohibit variable (amount-linked) fees but explicitly permit fixed service charges for the administrative and operational costs of card-based cash withdrawal services.",
+      "tokens_in": 11131,
+      "tokens_out": 1714,
+      "elapsed_s": 17.5
+    },
+    {
+      "id": "q039",
+      "query": "Customer's existing murabaha on a truck fleet matures next month and he can't clear it. Can we roll it into a fresh murabaha with him over the same fleet?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS8-2.2.8"
+      ],
+      "difficulty": "hard",
+      "category": "refinancing",
+      "rationale": "SS8-2.2.8 states it is not permitted to renew a murabaha contract on the same commodity that was the subject matter of a previous murabaha with the same customer, that is, to refinance the transaction.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS8-2.2.8",
+        "SS49-4.4",
+        "SS8-4.8",
+        "SS8-2.2.1",
+        "SS8-2.2.2"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS8-2.2.8",
+          "quote": "it is not permitted to renew a Murabahah contract on the same commodity that was the subject matter of a previous Murabahah contract with the same customer, i.e. to refinance the transaction",
+          "supports": "the core prohibition on rolling the existing murabaha into a fresh murabaha over the same fleet"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "ownership_sequence"
+      ],
+      "reasoning": "The proposal contemplates rolling an existing murabaha on a truck fleet into a fresh murabaha contract over the same fleet with the same customer. This arrangement is directly prohibited by AAOIFI SS No. 8, clause 2/2/8, which explicitly states: 'it is not permitted to renew a Murabahah contract on the same commodity that was the subject matter of a previous Murabahah contract with the same customer, i.e. to refinance the transaction.' The truck fleet is the commodity in question; it was the subject matter of the previous murabaha; and the proposed renewal is with the same customer. The stated mechanism\u2014refinancing\u2014matches precisely what the standard forbids. The prohibition is categorical and does not depend on the reason for the renewal (inability to clear the existing contract, or any other circumstance). The other retrieved clauses address different aspects of murabaha validity (supplier relationship, installment terms, offer acceptance) but do not alter or limit the prohibition on renewal/refinancing of the same asset with the same party.",
+      "tokens_in": 11418,
+      "tokens_out": 1462,
+      "elapsed_s": 15.6
+    },
+    {
+      "id": "q040",
+      "query": "We want to price letters of guarantee at 1.5% of the guaranteed amount per annum. That's where the market is. Any objection?",
+      "gold_verdict": "NON_COMPLIANT",
+      "gold_clauses": [
+        "SS5-6.1.1",
+        "SS5-3.1.5"
+      ],
+      "difficulty": "medium",
+      "category": "guarantee_fee",
+      "rationale": "SS5-6.1.1 prohibits taking remuneration for issuing a letter of guarantee where it is consideration for the guarantee itself, and SS5-3.1.5 bars any remuneration for providing a personal guarantee, leaving only recovery of actual administrative expenses.",
+      "actual_verdict": "NON_COMPLIANT",
+      "confidence": 0.95,
+      "retrieved": [
+        "SS5-6.1.1",
+        "SS5-6.1.2",
+        "SS14-3.3.3",
+        "SS37-5.3.2.3",
+        "SS14-3.3.1"
+      ],
+      "cited": [
+        {
+          "chunk_id": "SS5-6.1.1",
+          "quote": "It is not permissible to take remuneration for issuing a letter of guarantee, whether it is with cover or without cover, if the remuneration is intended as consideration for the guarantee",
+          "supports": "Core prohibition on percentage-based fees for guarantee service"
+        },
+        {
+          "chunk_id": "SS5-6.1.2",
+          "quote": "Asking an applicant for a letter of guarantee to bear administrative expenses incurred in issuing a letter of guarantee of either type (i.e. preliminary or final) is permissible in Shari'ah, provided the remuneration for such expenses do not exceed the commission that others would charge for such services",
+          "supports": "Only permissible remuneration is for administrative expenses, not for the guarantee itself"
+        },
+        {
+          "chunk_id": "SS37-5.3.2.3",
+          "quote": "The institution should not obtain any returns on the guarantee relating to documentary credits, letters of guarantee, and bank suretyship suretyship,, except actual expenses",
+          "supports": "Reaffirms that returns on guarantees are limited to actual expenses only"
+        },
+        {
+          "chunk_id": "SS14-3.3.1",
+          "quote": "The aspect of guarantee per se must not be taken into account when estimating fees for documentary credit. Accordingly, it is not permissible for an institution to charge an amount in addition to the actual expenses incurred if it endorses a credit facility issued by another bank",
+          "supports": "Prohibition on charging for the guarantee aspect itself, only actual expenses"
+        }
+      ],
+      "escalations": [],
+      "escalation_details": [],
+      "concerns": [
+        "riba",
+        "late_payment_penalty"
+      ],
+      "reasoning": "The proposal to charge 1.5% of the guaranteed amount per annum as remuneration for issuing letters of guarantee is prohibited by the retrieved standards. The foundational rule is stated in [SS5-6.1.1], which establishes that 'it is not permissible to take remuneration for issuing a letter of guarantee, whether it is with cover or without cover, if the remuneration is intended as consideration for the guarantee.' The 1.5% annual charge is structured as a percentage of the guaranteed amount\u2014a classic fee model for the guarantee service itself, not for ancillary expenses. This violates the core prohibition. The only permissible remuneration under [SS5-6.1.2] is for 'administrative expenses incurred in issuing a letter of guarantee,' and only to the extent those expenses 'do not exceed the commission that others would charge for such services.' The proposed 1.5% is not framed as or limited to actual administrative costs; it is a market-based percentage fee for the guarantee function. This interpretation is reinforced by [SS37-5.3.2.3], which states the institution 'should not obtain any returns on the guarantee relating to documentary credits, letters of guarantee, and bank suretyship, except actual expenses.' The proposal also conflicts with [SS14-3.3.1](b), which forbids charging amounts 'in addition to the actual expenses incurred' when the 'aspect of guarantee per se' is involved. The proposed 1.5% annual charge is unmistakably a return on the guarantee per se, not on administrative services, and therefore cannot be supported by the standards.",
+      "tokens_in": 11257,
+      "tokens_out": 1922,
+      "elapsed_s": 19.8
+    }
+  ]
+}

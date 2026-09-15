@@ -405,7 +405,10 @@ measurement has already contradicted.
 ### 3.0 Baseline
 
 Two runs of 40 labelled cases on `claude-haiku-4.5`, index `bff37e1f657b9ae3`,
-prompt `v1`, `top_k=5`. About $1 and eight minutes each.
+prompt `v1`, `top_k=5`. About $1 and eight minutes each. Both are committed under
+`eval/results/` with every case's retrieved ids, citations, escalation codes and
+token counts, so nothing in this section has to be taken on trust —
+`scripts/verify_docs.py` re-reads them and fails if the figures below drift.
 
 | | run 1 | run 2 |
 |---|---|---|

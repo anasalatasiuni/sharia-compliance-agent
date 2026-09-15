@@ -14,7 +14,13 @@ corpus/raw/*
 # earlier run may still be on disk — and it is root-owned, so it is easy to
 # stage by accident with `git add -A`.
 qdrant_storage/
-eval/results/
+# Eval runs are evidence for the numbers in PART2 §3, so the ones the document
+# quotes are committed; ad-hoc runs are not.
+eval/results/*
+!eval/results/20260915T0708*.json
+!eval/results/20260915T0718*.json
+!eval/results/20260915T1039*.json
+!eval/results/20260915T1049*.json
 logs/
 
 # docs/ is a deliverable in this repo. A global ignore rule (**/docs/) excludes
