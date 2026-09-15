@@ -47,3 +47,5 @@ jobs:
             503) echo "::warning::service is up but degraded — check the index" ;;
             *)   echo "::error::unexpected status $code"; exit 1 ;;
           esac
+
+# rescan
